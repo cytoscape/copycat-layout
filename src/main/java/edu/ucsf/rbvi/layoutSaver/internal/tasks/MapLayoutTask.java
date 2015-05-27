@@ -1,6 +1,7 @@
 package edu.ucsf.rbvi.layoutSaver.internal.tasks;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,7 @@ public class MapLayoutTask extends AbstractTask {
 		CyNetwork network = netView.getModel();
 		List<String> columnNames = 
 						new ArrayList<String>(CyTableUtil.getColumnNames(network.getDefaultNodeTable()));
+		Collections.sort(columnNames);
 		return columnNames;
 	}
 
