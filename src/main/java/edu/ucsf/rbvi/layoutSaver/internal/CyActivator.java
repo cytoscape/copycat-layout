@@ -35,6 +35,9 @@ public class CyActivator extends AbstractCyActivator {
 		settingsProps.setProperty(TITLE, "Map layout");
 		settingsProps.setProperty(IN_MENU_BAR, "true");
 		settingsProps.setProperty(MENU_GRAVITY, "1.0");
+		settingsProps.setProperty(COMMAND_NAMESPACE, "layoutMapper");
+		settingsProps.setProperty(COMMAND, "map");
+		settingsProps.setProperty(COMMAND_DESCRIPTION, "Map node locations from one network to another network");
 		registerService(bc, layoutMapper, NetworkViewTaskFactory.class, settingsProps);
 
 	}

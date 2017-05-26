@@ -23,13 +23,16 @@ public class MapLayoutTask extends AbstractTask {
 	Map<String, CyNetworkView> viewMap;
 	CyNetworkView view;
 
+	@Tunable(description="Choose network to map from", context="nogui")
+	public CyNetwork mapFromNetwork = null;
+
 	public ListSingleSelection<String> mapToNetwork;
 	@Tunable(description="Choose network to map this layout to", required=true, gravity=1.0)
-	public ListSingleSelection<String> getMapToNetwork() {
+	public ListSingleSelection<String> getmapToNetwork() {
 		return mapToNetwork;
 	}
 
-	public void setMapToNetwork(ListSingleSelection<String> mtn) {
+	public void setmapToNetwork(ListSingleSelection<String> mtn) {
 		CyNetworkView toNetworkView = viewMap.get(mapToNetwork.getSelectedValue());
 		mapToColumn = new ListSingleSelection<String>(getColumnNames(toNetworkView));
 	}
@@ -39,7 +42,7 @@ public class MapLayoutTask extends AbstractTask {
 
 	public ListSingleSelection<String> mapToColumn = null;
 	@Tunable(description="Choose column to map to", required=true, gravity=3.0, listenForChange="mapToNetwork")
-	public ListSingleSelection<String> getMapToColumn() {
+	public ListSingleSelection<String> getmapToColumn() {
 		if (mapToColumn == null) {
 			CyNetworkView toNetworkView = viewMap.get(mapToNetwork.getSelectedValue());
 			mapToColumn = new ListSingleSelection<String>(getColumnNames(toNetworkView));
@@ -47,7 +50,7 @@ public class MapLayoutTask extends AbstractTask {
 		return mapToColumn;
 	}
 
-	public void setMapToColumn(ListSingleSelection<String> map) {
+	public void setmapToColumn(ListSingleSelection<String> map) {
 	}
 	
 	/**
@@ -64,6 +67,15 @@ public class MapLayoutTask extends AbstractTask {
 		}
 
 		mapToNetwork = new ListSingleSelection<String>(new ArrayList<String>(viewMap.keySet()));
+
+		if (mapFromNetwork != null) {
+			for (CyNetworkView v: viewManager.getNetworkViewSet()) {
+				if (v.getModel().equals(mapFromNetwork)) {
+					view = v;
+					break;
+				}
+			}
+		}
 
 		mapFromColumn = new ListSingleSelection<String>(getColumnNames(view));
 	}
@@ -105,6 +117,8 @@ public class MapLayoutTask extends AbstractTask {
 	}
 
 	private List<String> getColumnNames(CyNetworkView netView) {
+		if (netView == null)
+			return new ArrayList<String>();
 		CyNetwork network = netView.getModel();
 		List<String> columnNames = 
 						new ArrayList<String>(CyTableUtil.getColumnNames(network.getDefaultNodeTable()));
