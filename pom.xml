@@ -2,20 +2,20 @@
 	<modelVersion>4.0.0</modelVersion>
 	
 	<properties>
-		<bundle.symbolicName>layoutSaver</bundle.symbolicName>
-		<bundle.namespace>edu.ucsf.rbvi.layoutSaver.internal</bundle.namespace>
+		<bundle.symbolicName>layoutMapper</bundle.symbolicName>
+		<bundle.namespace>org.cytoscape.layoutMapper.internal</bundle.namespace>
 		<cytoscape.api.version>3.2.0</cytoscape.api.version>
 		
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
 		<osgi.api.version>4.2.0</osgi.api.version>
 	</properties>
 
-	<groupId>edu.ucsf.rbvi</groupId>
-	<artifactId>layoutSaver</artifactId>
+	<groupId>org.cytoscape.layoutMapper</groupId>
+	<artifactId>layoutMapper</artifactId>
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 
-	<version>1.1.0</version>
+	<version>1.2.0</version>
 
 	<build>
 		<plugins>

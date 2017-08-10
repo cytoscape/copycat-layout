@@ -1,4 +1,4 @@
-package edu.ucsf.rbvi.layoutSaver.internal.tasks;
+package org.cytoscape.layoutMapper.internal.task;
 
 import org.cytoscape.task.AbstractNetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkView;
@@ -12,16 +12,16 @@ public class MapLayoutTaskFactory extends AbstractNetworkViewTaskFactory {
 		super();
 		this.viewManager = viewManager;
 	}
-	
-	public boolean isReady(CyNetworkView networkView) {
-		if (super.isReady(networkView))
-			return true;
-		else return false;
-	}
-	
+
 	public TaskIterator createTaskIterator(CyNetworkView arg0) {
-		MapLayoutTask task = new MapLayoutTask(arg0, viewManager);
-		return new TaskIterator(task);
+		if (arg0 == null) {
+			return new TaskIterator(new MapLayoutTask(viewManager));
+		}
+		return new TaskIterator(new MapLayoutTask(arg0, viewManager));
+	}
+
+	public boolean isReady(CyNetworkView arg0) {
+		return true;
 	}
 
 }
