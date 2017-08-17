@@ -22,7 +22,7 @@ public class MapLayoutTaskObserver implements TaskObserver {
 		return response;
 	}
 
-	private String result;
+	private MapLayoutParameters result;
 	private String resourcePath;
 	private String errorCode;
 
@@ -33,21 +33,26 @@ public class MapLayoutTaskObserver implements TaskObserver {
 		this.errorCode = errorCode;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void allFinished(FinishStatus arg0) {
-
+		
 		if (arg0.getType() == FinishStatus.Type.SUCCEEDED || arg0.getType() == FinishStatus.Type.CANCELLED) {
-			response = new CIResponse<String>();
-			((CIResponse<String>) response).data = result;
+			response = new CIResponse<MapLayoutParameters>();
+			
+			((CIResponse<MapLayoutParameters>) response).data = result;
 			response.errors = new ArrayList<CIError>();
 		} else {
 			response = this.mapLayoutResource.buildCIErrorResponse(
 					Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), resourcePath, errorCode,
 					arg0.getException().getMessage(), arg0.getException());
 		}
+		
 	}
 
+	
 	public void taskFinished(ObservableTask arg0) {
-		String jsonResult = arg0.getResults(String.class);
-		result = jsonResult;
+		MapLayoutParameters res = arg0.getResults(MapLayoutParameters.class);
+		System.out.println("taskFinished");
+		result = res;
 	}
 }

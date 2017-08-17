@@ -5,10 +5,12 @@
 	<properties>
 		<bundle.symbolicName>layoutMapper</bundle.symbolicName>
 		<bundle.namespace>org.cytoscape.layoutMapper.internal</bundle.namespace>
-		<cytoscape.api.version>3.2.0</cytoscape.api.version>
+		<cytoscape.api.version>3.6.0-SNAPSHOT</cytoscape.api.version>
 		<junit.version>4.12</junit.version>
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
 		<osgi.api.version>4.2.0</osgi.api.version>
+		<maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
+		
 	</properties>
 
 	<groupId>org.cytoscape.layoutMapper</groupId>
@@ -32,8 +34,8 @@
 						<Export-Package>!${bundle.namespace}.*</Export-Package>
 						<Private-Package>${bundle.namespace}.*</Private-Package>
 						<Bundle-Activator>${bundle.namespace}.CyActivator</Bundle-Activator>
-						<Cytoscape-App-Dependencies>CX Support;2.1.0,cyREST;3.4.0</Cytoscape-App-Dependencies>
-						<Embed-Dependency>*;scope=!provided|test;groupId=!org.cytoscape;ci-bridge-impl</Embed-Dependency>
+						<Cytoscape-App-Dependencies>cyREST;3.6.0-SNAPSHOT</Cytoscape-App-Dependencies>
+						<Embed-Dependency>*;scope=!provided|test;groupId=!org.cytoscape</Embed-Dependency>
 						<Embed-Transitive>true</Embed-Transitive>
 						<Import-Package>*;resolution:=optional</Import-Package>
 					</instructions>
@@ -89,6 +91,7 @@
 			<version>1.5.7</version>
 			<scope>provided</scope>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
@@ -144,9 +147,10 @@
 		</dependency>
 		
 		<dependency>
-			<groupId>org.cytoscape-ci</groupId>
-			<artifactId>ci-bridge-impl</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<groupId>org.cytoscape</groupId>
+			<artifactId>ci-api</artifactId>
+			<version>${cytoscape.api.version}</version>
+			<scope>provided</scope>
 		</dependency>
 
 		<!-- For testing -->

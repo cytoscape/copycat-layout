@@ -11,10 +11,17 @@ import static org.cytoscape.work.ServiceProperties.TOOL_BAR_GRAVITY;
 
 import java.util.Properties;
 
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.ci.CIErrorFactory;
+import org.cytoscape.ci.CIExceptionFactory;
+import org.cytoscape.ci.CIResponseFactory;
+import org.cytoscape.layoutMapper.internal.rest.MapLayoutResource;
 import org.cytoscape.layoutMapper.internal.task.MapLayoutTaskFactory;
+import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.task.NetworkViewTaskFactory;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.work.SynchronousTaskManager;
 import org.osgi.framework.BundleContext;
 
 public class CyActivator extends AbstractCyActivator {
@@ -40,6 +47,20 @@ public class CyActivator extends AbstractCyActivator {
 		settingsProps.setProperty(COMMAND_DESCRIPTION, "Map network layout from one network view to another");
 
 		registerService(bc, layoutMapper, NetworkViewTaskFactory.class, settingsProps);
+
+		CyApplicationManager cyApplicationManager = getService(bc, CyApplicationManager.class);
+
+		SynchronousTaskManager<?> taskManager = getService(bc, SynchronousTaskManager.class);
+		final CyNetworkManager cyNetworkManager = getService(bc, CyNetworkManager.class);
+		final CyNetworkViewManager cyNetworkViewManager = getService(bc, CyNetworkViewManager.class);
+		
+		CIResponseFactory ciResponseFactory = this.getService(bc, CIResponseFactory.class);
+		CIExceptionFactory ciExceptionFactory = this.getService(bc, CIExceptionFactory.class);
+		CIErrorFactory ciErrorFactory = this.getService(bc, CIErrorFactory.class);
+
+		MapLayoutResource resource = new MapLayoutResource(cyApplicationManager, taskManager, cyNetworkManager,
+				cyNetworkViewManager, layoutMapper, ciResponseFactory, ciExceptionFactory, ciErrorFactory);
+		registerService(bc, resource, MapLayoutResource.class, new Properties());
 
 	}
 }

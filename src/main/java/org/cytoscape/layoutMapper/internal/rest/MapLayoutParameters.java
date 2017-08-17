@@ -9,14 +9,12 @@ import io.swagger.annotations.ApiModelProperty;
  * @author brettjsettle
  *
  */
-@ApiModel(value="Map Layout Parameters", description="Parameters for clone layout")
+@ApiModel(value="Map Layout Parameters", description="Parameters for mapping one layout onto another")
 public class MapLayoutParameters {
-	@ApiModelProperty(value = "The network whose layout is being mapped")
-	public String fromNetworkName;
-	@ApiModelProperty(value = "A node column used to map nodes in the source network to nodes in the target network", example="name")
-	public String fromColumnName;
-	@ApiModelProperty(value = "The network view that is receiving the mapped layout")
-	public String toNetworkName;
-	@ApiModelProperty(value = "A node column used to map nodes in the target network to nodes in the source network", example="name")
-	public String toColumnName;
+	@ApiModelProperty(value = "A node column used to map nodes in the source network to nodes in the target network")
+	public String fromColumn;
+	@ApiModelProperty(value = "The name of the network view that is receiving the mapped layout")
+	public String toNetwork;
+	@ApiModelProperty(value = "A node column used to map nodes in the target network to nodes in the source network")
+	public String toColumn;
 }
