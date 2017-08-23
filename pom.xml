@@ -3,8 +3,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
-		<bundle.symbolicName>layoutMapper</bundle.symbolicName>
-		<bundle.namespace>org.cytoscape.layoutMapper.internal</bundle.namespace>
+		<bundle.symbolicName>copyLayout</bundle.symbolicName>
+		<bundle.namespace>org.cytoscape.copyLayout.internal</bundle.namespace>
 		<cytoscape.api.version>3.6.0-SNAPSHOT</cytoscape.api.version>
 		<junit.version>4.12</junit.version>
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
@@ -13,8 +13,8 @@
 		
 	</properties>
 
-	<groupId>org.cytoscape.layoutMapper</groupId>
-	<artifactId>layoutMapper</artifactId>
+	<groupId>org.cytoscape.copyLayout</groupId>
+	<artifactId>copyLayout</artifactId>
 	<packaging>bundle</packaging>
 	<name>${bundle.symbolicName}</name>
 

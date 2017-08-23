@@ -1,4 +1,4 @@
-package org.cytoscape.layoutMapper.internal;
+package org.cytoscape.copyLayout.internal;
 
 import static org.cytoscape.work.ServiceProperties.COMMAND;
 import static org.cytoscape.work.ServiceProperties.COMMAND_DESCRIPTION;
@@ -15,8 +15,8 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.ci.CIErrorFactory;
 import org.cytoscape.ci.CIExceptionFactory;
 import org.cytoscape.ci.CIResponseFactory;
-import org.cytoscape.layoutMapper.internal.rest.MapLayoutResource;
-import org.cytoscape.layoutMapper.internal.task.MapLayoutTaskFactory;
+import org.cytoscape.copyLayout.internal.rest.CopyLayoutResource;
+import org.cytoscape.copyLayout.internal.task.CopyLayoutTaskFactory;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.task.NetworkViewTaskFactory;
@@ -34,17 +34,17 @@ public class CyActivator extends AbstractCyActivator {
 
 		CyNetworkViewManager viewManager = getService(bc, CyNetworkViewManager.class);
 
-		MapLayoutTaskFactory layoutMapper = new MapLayoutTaskFactory(viewManager);
+		CopyLayoutTaskFactory layoutMapper = new CopyLayoutTaskFactory(viewManager);
 		Properties settingsProps = new Properties();
 		settingsProps.setProperty(PREFERRED_MENU, "Layout");
-		settingsProps.setProperty(TITLE, "Map layout");
+		settingsProps.setProperty(TITLE, "Copy layout");
 		settingsProps.setProperty(TOOL_BAR_GRAVITY, "7.0");
 		settingsProps.setProperty(IN_MENU_BAR, "true");
 		settingsProps.setProperty(MENU_GRAVITY, "5.0");
 
 		settingsProps.setProperty(COMMAND_NAMESPACE, "layout");
-		settingsProps.setProperty(COMMAND, "map");
-		settingsProps.setProperty(COMMAND_DESCRIPTION, "Map network layout from one network view to another");
+		settingsProps.setProperty(COMMAND, "copy");
+		settingsProps.setProperty(COMMAND_DESCRIPTION, "Copy network layout from one network view to another");
 
 		registerService(bc, layoutMapper, NetworkViewTaskFactory.class, settingsProps);
 
@@ -58,9 +58,9 @@ public class CyActivator extends AbstractCyActivator {
 		CIExceptionFactory ciExceptionFactory = this.getService(bc, CIExceptionFactory.class);
 		CIErrorFactory ciErrorFactory = this.getService(bc, CIErrorFactory.class);
 
-		MapLayoutResource resource = new MapLayoutResource(cyApplicationManager, taskManager, cyNetworkManager,
+		CopyLayoutResource resource = new CopyLayoutResource(cyApplicationManager, taskManager, cyNetworkManager,
 				cyNetworkViewManager, layoutMapper, ciResponseFactory, ciExceptionFactory, ciErrorFactory);
-		registerService(bc, resource, MapLayoutResource.class, new Properties());
+		registerService(bc, resource, CopyLayoutResource.class, new Properties());
 
 	}
 }

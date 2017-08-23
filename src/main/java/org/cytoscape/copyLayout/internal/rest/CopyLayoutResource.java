@@ -1,4 +1,4 @@
-package org.cytoscape.layoutMapper.internal.rest;
+package org.cytoscape.copyLayout.internal.rest;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import org.cytoscape.ci.CIExceptionFactory;
 import org.cytoscape.ci.CIResponseFactory;
 import org.cytoscape.ci.model.CIError;
 import org.cytoscape.ci.model.CIResponse;
-import org.cytoscape.layoutMapper.internal.task.MapLayoutTaskFactory;
+import org.cytoscape.copyLayout.internal.task.CopyLayoutTaskFactory;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkManager;
@@ -39,16 +39,16 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-@Api(tags = { "Apps: Map Layout" })
-@Path("/layoutMapper/")
-public class MapLayoutResource {
+@Api(tags = { "Apps: Copy Layout" })
+@Path("/v1/layout/")
+public class CopyLayoutResource {
 
 	private final CyApplicationManager cyApplicationManager;
 
 	private final CyNetworkManager cyNetworkManager;
 	private final CyNetworkViewManager cyNetworkViewManager;
 
-	private final MapLayoutTaskFactory mapLayoutTaskFactory;
+	private final CopyLayoutTaskFactory copyLayoutTaskFactory;
 	private final SynchronousTaskManager<?> taskManager;
 
 	private final CIExceptionFactory ciExceptionFactory;
@@ -59,29 +59,29 @@ public class MapLayoutResource {
 	public static final String CY_NETWORK_VIEW_NOT_FOUND_CODE = "2";
 	public static final String TASK_EXECUTION_ERROR_CODE = "3";
 
-	private static final String GENERIC_SWAGGER_NOTES = "Map Layouts will transfer one network view layout onto another, "
+	private static final String GENERIC_SWAGGER_NOTES = "Copy one network view layout onto another, "
 			+ "setting the node location and view scale to match. This makes visually comparing networks simple." + '\n'
 			+ '\n';
 
-	public MapLayoutResource(final CyApplicationManager cyApplicationManager,
+	public CopyLayoutResource(final CyApplicationManager cyApplicationManager,
 			final SynchronousTaskManager<?> taskManager, final CyNetworkManager cyNetworkManager,
-			final CyNetworkViewManager cyNetworkViewManager, final MapLayoutTaskFactory mapLayoutTaskFactory,
+			final CyNetworkViewManager cyNetworkViewManager, final CopyLayoutTaskFactory copyLayoutTaskFactory,
 			final CIResponseFactory ciResponseFactory, final CIExceptionFactory ciExceptionFactory,
 			final CIErrorFactory ciErrorFactory) {
 		this.cyApplicationManager = cyApplicationManager;
 		this.taskManager = taskManager;
 		this.cyNetworkManager = cyNetworkManager;
 		this.cyNetworkViewManager = cyNetworkViewManager;
-		this.mapLayoutTaskFactory = mapLayoutTaskFactory;
+		this.copyLayoutTaskFactory = copyLayoutTaskFactory;
 		this.ciExceptionFactory = ciExceptionFactory;
 		this.ciResponseFactory = ciResponseFactory;
 		this.ciErrorFactory = ciErrorFactory;
 
 	}
 
-	private static final Logger logger = LoggerFactory.getLogger(MapLayoutResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(CopyLayoutResource.class);
 
-	private final static String resourceErrorRoot = "urn:cytoscape:ci:mapLayout-app:v1";
+	private final static String resourceErrorRoot = "urn:cytoscape:ci:copyLayout-app:v1";
 
 	private CIError buildCIError(int status, String resourcePath, String code, String message, Exception e) {
 		return ciErrorFactory.getCIError(status, resourceErrorRoot + ":" + resourcePath + ":" + code, message);
@@ -160,40 +160,40 @@ public class MapLayoutResource {
 				new CIError[] { this.buildCIError(404, resourcePath, errorType, messageString, null) });
 	}
 
-	@ApiModel(value = "Map Layout Response", description = "Map Layout Results in CI Format", parent = CIResponse.class)
-	public static class MapLayoutResponse extends CIResponse<MapLayoutParameters> {
+	@ApiModel(value = "Copy Layout Response", description = "Copy Layout Results in CI Format", parent = CIResponse.class)
+	public static class CopyLayoutResponse extends CIResponse<CopyLayoutParameters> {
 	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("currentView/map")
-	@ApiOperation(value = "Map the current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = MapLayoutResponse.class)
+	@Path("currentView/copy")
+	@ApiOperation(value = "Copy the current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopyLayoutResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network or Network View does not exist", response = CIResponse.class) })
-	public Response mapLayout(
-			@ApiParam(value = "Map Layout Parameters", required = true) MapLayoutParameters mapLayoutParameters) {
-		CyNetwork cyNetwork = getCyNetwork("map_current_layout", CY_NETWORK_NOT_FOUND_CODE);
-		CyNetworkView cyNetworkView = getCyNetworkView("map_current_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE);
+	public Response copyLayout(
+			@ApiParam(value = "Copy Layout Parameters", required = true) CopyLayoutParameters copyLayoutParameters) {
+		CyNetwork cyNetwork = getCyNetwork("copy_current_layout", CY_NETWORK_NOT_FOUND_CODE);
+		CyNetworkView cyNetworkView = getCyNetworkView("copy_current_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE);
 
-		return mapLayout(cyNetwork.getSUID(), cyNetworkView.getSUID(), mapLayoutParameters);
+		return copyLayout(cyNetwork.getSUID(), cyNetworkView.getSUID(), copyLayoutParameters);
 	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("{networkSUID}/views/{networkViewSUID}/map")
-	@ApiOperation(value = "Execute map layout on a specific network view", notes = GENERIC_SWAGGER_NOTES, response = MapLayoutResponse.class)
+	@Path("{networkSUID}/views/{networkViewSUID}/copy")
+	@ApiOperation(value = "Execute copy layout on a specific network view", notes = GENERIC_SWAGGER_NOTES, response = CopyLayoutResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 404, message = "Network does not exist", response = CIResponse.class) })
 
-	public Response mapLayout(
+	public Response copyLayout(
 			@ApiParam(value = "Network SUID (see GET /v1/networks)") @PathParam("networkSUID") long networkSUID,
 			@ApiParam(value = "Network View SUID (see GET /v1/networks/{networkId}/views)") @PathParam("networkViewSUID") long networkViewSUID,
-			@ApiParam(value = "Map Layout Parameters", required = true) MapLayoutParameters mapLayoutParameters) {
+			@ApiParam(value = "Copy Layout Parameters", required = true) CopyLayoutParameters copyLayoutParameters) {
 
-		CyNetworkView cyNetworkView = getCyNetworkView("map_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE, networkSUID,
+		CyNetworkView cyNetworkView = getCyNetworkView("copy_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE, networkSUID,
 				networkViewSUID);
-		MapLayoutTaskObserver taskObserver = new MapLayoutTaskObserver(this, "map_layout", TASK_EXECUTION_ERROR_CODE);
+		CopyLayoutTaskObserver taskObserver = new CopyLayoutTaskObserver(this, "copy_layout", TASK_EXECUTION_ERROR_CODE);
 
 		Map<String, Object> tunableMap = new HashMap<String, Object>();
 
@@ -208,25 +208,25 @@ public class MapLayoutResource {
 		for (CyColumn col : table.getColumns()) {
 			cols.add(col.getName());
 		}
-		if (!cols.contains(mapLayoutParameters.fromColumn)){
+		if (!cols.contains(copyLayoutParameters.fromColumn)){
 			String errorString = "Source column does not describe a column in the source network";
-			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(404, "layoutMapper", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		
 		fromColumn.setPossibleValues(cols);
-		fromColumn.setSelectedValue(mapLayoutParameters.fromColumn);
+		fromColumn.setSelectedValue(copyLayoutParameters.fromColumn);
 
 		ArrayList<String> networkNames = new ArrayList<String>();
 		for (CyNetwork toNet : cyNetworkManager.getNetworkSet()) {
 			String toName = toNet.getRow(toNet).get(CyNetwork.NAME, String.class);
 			networkNames.add(toName);
 		}
-		if (!networkNames.contains(mapLayoutParameters.toNetwork)){
+		if (!networkNames.contains(copyLayoutParameters.toNetwork)){
 			String errorString = "Target network not found";
-			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(404, "layoutMapper", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		toNetwork.setPossibleValues(networkNames);
-		toNetwork.setSelectedValue(mapLayoutParameters.toNetwork);
+		toNetwork.setSelectedValue(copyLayoutParameters.toNetwork);
 
 		ArrayList<String> toColumnNames = new ArrayList<String>();
 		ArrayList<String> toCols = new ArrayList<String>();
@@ -241,19 +241,19 @@ public class MapLayoutResource {
 			}
 		}
 		
-		if (!toCols.contains(mapLayoutParameters.toColumn)){
+		if (!toCols.contains(copyLayoutParameters.toColumn)){
 			String errorString = "Target column does not describe a column in the target network";
-			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(404, "layoutMapper", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		
-		toColumnNames.add(mapLayoutParameters.toColumn);
-		toColumn.setSelectedValue(mapLayoutParameters.toColumn);
+		toColumnNames.add(copyLayoutParameters.toColumn);
+		toColumn.setSelectedValue(copyLayoutParameters.toColumn);
 
 		fromNetwork.setSelectedValue(net.getRow(net).get(CyNetwork.NAME, String.class));
 
 		if (fromNetwork.getSelectedValue().equals(toNetwork.getSelectedValue())) {
 			String errorString = "Source and target layout network are the same";
-			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(404, "layoutMapper", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(400, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 			
 		}
 		tunableMap.put("fromNetwork", fromNetwork);
@@ -261,7 +261,7 @@ public class MapLayoutResource {
 		tunableMap.put("toNetwork", toNetwork);
 		tunableMap.put("toColumn", toColumn);
 
-		TaskIterator taskIterator = mapLayoutTaskFactory.createTaskIterator(cyNetworkView);
+		TaskIterator taskIterator = copyLayoutTaskFactory.createTaskIterator(cyNetworkView);
 
 		taskManager.setExecutionContext(tunableMap);
 		taskManager.execute(taskIterator, taskObserver);

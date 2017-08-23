@@ -1,4 +1,4 @@
-package org.cytoscape.layoutMapper.internal.task;
+package org.cytoscape.copyLayout.internal.task;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.cytoscape.layoutMapper.internal.rest.MapLayoutParameters;
+import org.cytoscape.copyLayout.internal.rest.CopyLayoutParameters;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTableUtil;
@@ -15,18 +15,19 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
 import org.cytoscape.work.AbstractTask;
+import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.ProvidesTitle;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
 
-public class MapLayoutTask extends AbstractTask {
+public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 	Map<String, CyNetworkView> viewMap;
-	private MapLayoutTask mapResult = null;
+	private CopyLayoutParameters copyResult = null;
 
 	public ListSingleSelection<String> fromNetwork;
 
-	@Tunable(description = "Choose network to map this layout from", gravity = 1.0)
+	@Tunable(description = "Choose network to copy the layout from", gravity = 1.0)
 	public ListSingleSelection<String> getfromNetwork() {
 		ArrayList<String> available = new ArrayList<String>(viewMap.keySet());
 		available.remove(fromNetwork.getSelectedValue());
@@ -45,7 +46,7 @@ public class MapLayoutTask extends AbstractTask {
 
 	public ListSingleSelection<String> toNetwork;
 
-	@Tunable(description = "Choose network to map this layout to", required = true, gravity = 3.0)
+	@Tunable(description = "Choose network to paste this layout to", required = true, gravity = 3.0)
 	public ListSingleSelection<String> gettoNetwork() {
 		return toNetwork;
 	}
@@ -88,7 +89,7 @@ public class MapLayoutTask extends AbstractTask {
 		toColumn = map;
 	}
 
-	public MapLayoutTask(CyNetworkViewManager viewManager) {
+	public CopyLayoutTask(CyNetworkViewManager viewManager) {
 		super();
 
 		viewMap = new HashMap<String, CyNetworkView>();
@@ -102,7 +103,7 @@ public class MapLayoutTask extends AbstractTask {
 
 	}
 
-	public MapLayoutTask(CyNetworkView view, CyNetworkViewManager viewManager) {
+	public CopyLayoutTask(CyNetworkView view, CyNetworkViewManager viewManager) {
 		super();
 
 		viewMap = new HashMap<String, CyNetworkView>();
@@ -131,7 +132,7 @@ public class MapLayoutTask extends AbstractTask {
 
 	@ProvidesTitle
 	public String getTitle() {
-		return "Map Layout";
+		return "Copy Layout";
 	}
 
 	@Override
@@ -146,7 +147,7 @@ public class MapLayoutTask extends AbstractTask {
 		if (toNetworkView.equals(fromNetworkView)) {
 			// logger.error("Could not parse the following Diffusion service
 			// response: " + responseJSONString);
-			throw new Exception("Can not map a network layout to itself");
+			throw new Exception("Can not copy a network layout to itself");
 		}
 
 		Map<Object, View<CyNode>> targetMap = new HashMap<Object, View<CyNode>>();
@@ -189,6 +190,10 @@ public class MapLayoutTask extends AbstractTask {
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH));
 		toNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR,
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR));
+		copyResult =  new CopyLayoutParameters();
+		copyResult.toColumn = toColumn.getSelectedValue();
+		copyResult.fromColumn = fromColumn.getSelectedValue();
+		copyResult.toNetwork = toNetwork.getRow(toNetwork).get(CyNetwork.NAME, String.class);
 		
 	}
 
@@ -209,12 +214,12 @@ public class MapLayoutTask extends AbstractTask {
 
 	@SuppressWarnings("unchecked")
 	public <R> R getResults(Class<? extends R> type) {
-		System.out.println("RESULT: " + mapResult);
+		String name = fromNetwork.getSelectedValue();
 		if (type.equals(String.class)) {
-			return (R) (mapResult != null ? "Mapped " + mapResult.fromColumn.getSelectedValue() + " onto "
-					+ mapResult.toColumn.getSelectedValue() + "." : "No result columns available");
-		} else if (type.isAssignableFrom(MapLayoutParameters.class)) {
-			return (R) mapResult;
+			return (R) (copyResult != null ? "Copied " + copyResult.fromColumn + " in " + name + " onto "
+					+ copyResult.toColumn + " in " + copyResult.toNetwork + "." : "No result columns available");
+		} else if (type.isAssignableFrom(CopyLayoutParameters.class)) {
+			return (R) copyResult;
 		}
 		return null;
 	}
