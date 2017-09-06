@@ -1,4 +1,4 @@
-package org.cytoscape.copyLayout.internal.rest;
+package org.cytoscape.copycatLayout.internal.rest;
 
 import java.util.ArrayList;
 
@@ -10,23 +10,23 @@ import org.cytoscape.work.FinishStatus;
 import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskObserver;
 
-public class CopyLayoutTaskObserver implements TaskObserver {
+public class CopycatLayoutTaskObserver implements TaskObserver {
 
 	/**
 	 * 
 	 */
-	private final CopyLayoutResource copyLayoutResource;
+	private final CopycatLayoutResource copyLayoutResource;
 	CIResponse<?> response;
 
 	public CIResponse<?> getResponse() {
 		return response;
 	}
 
-	private CopyLayoutParameters result;
+	private CopycatLayoutParameters result;
 	private String resourcePath;
 	private String errorCode;
 
-	public CopyLayoutTaskObserver(CopyLayoutResource copyLayoutResource, String resourcePath, String errorCode) {
+	public CopycatLayoutTaskObserver(CopycatLayoutResource copyLayoutResource, String resourcePath, String errorCode) {
 		this.copyLayoutResource = copyLayoutResource;
 		response = null;
 		this.resourcePath = resourcePath;
@@ -36,9 +36,9 @@ public class CopyLayoutTaskObserver implements TaskObserver {
 	@SuppressWarnings("unchecked")
 	public void allFinished(FinishStatus arg0) {
 		if (arg0.getType() == FinishStatus.Type.SUCCEEDED || arg0.getType() == FinishStatus.Type.CANCELLED) {
-			response = new CIResponse<CopyLayoutParameters>();
+			response = new CIResponse<CopycatLayoutParameters>();
 			
-			((CIResponse<CopyLayoutParameters>) response).data = result;
+			((CIResponse<CopycatLayoutParameters>) response).data = result;
 			response.errors = new ArrayList<CIError>();
 		} else {
 			response = this.copyLayoutResource.buildCIErrorResponse(
@@ -50,7 +50,7 @@ public class CopyLayoutTaskObserver implements TaskObserver {
 
 	
 	public void taskFinished(ObservableTask arg0) {
-		CopyLayoutParameters res = arg0.getResults(CopyLayoutParameters.class);
+		CopycatLayoutParameters res = arg0.getResults(CopycatLayoutParameters.class);
 		result = res;
 	}
 }

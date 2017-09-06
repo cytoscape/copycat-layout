@@ -1,4 +1,4 @@
-package org.cytoscape.copyLayout.internal.rest;
+package org.cytoscape.copycatLayout.internal.rest;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -9,8 +9,9 @@ import io.swagger.annotations.ApiModelProperty;
  * @author brettjsettle
  *
  */
-@ApiModel(value="Copy Layout Parameters", description="Parameters for copying one layout onto another")
-public class CopyLayoutParameters {
+
+@ApiModel(value="Copycat Layout Parameters", description="Parameters for copying one layout onto another")
+public class CopycatLayoutParameters {
 	@ApiModelProperty(value = "A node column used to copy nodes in the source network to nodes in the target network")
 	public String fromColumn;
 	@ApiModelProperty(value = "The name of the network view that is receiving the copied layout")

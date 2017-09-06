@@ -1,12 +1,13 @@
-package org.cytoscape.copyLayout.internal.task;
+package org.cytoscape.copycatLayout.internal.task;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.cytoscape.copyLayout.internal.rest.CopyLayoutParameters;
+import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutParameters;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyTableUtil;
@@ -21,9 +22,9 @@ import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
 import org.cytoscape.work.util.ListSingleSelection;
 
-public class CopyLayoutTask extends AbstractTask implements ObservableTask {
+public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	Map<String, CyNetworkView> viewMap;
-	private CopyLayoutParameters copyResult = null;
+	private CopycatLayoutParameters copyResult = null;
 
 	public ListSingleSelection<String> fromNetwork;
 
@@ -89,21 +90,7 @@ public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 		toColumn = map;
 	}
 
-	public CopyLayoutTask(CyNetworkViewManager viewManager) {
-		super();
-
-		viewMap = new HashMap<String, CyNetworkView>();
-
-		for (CyNetworkView v : viewManager.getNetworkViewSet()) {
-			viewMap.put(getName(v), v);
-		}
-
-		toNetwork = new ListSingleSelection<String>(new ArrayList<String>(viewMap.keySet()));
-		fromNetwork = new ListSingleSelection<String>(new ArrayList<String>(viewMap.keySet()));
-
-	}
-
-	public CopyLayoutTask(CyNetworkView view, CyNetworkViewManager viewManager) {
+	public CopycatLayoutTask(CyNetworkView view, CyNetworkViewManager viewManager) {
 		super();
 
 		viewMap = new HashMap<String, CyNetworkView>();
@@ -132,12 +119,15 @@ public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 
 	@ProvidesTitle
 	public String getTitle() {
-		return "Copy Layout";
+		return "Copycat Layout";
 	}
 
 	@Override
 	public void run(TaskMonitor monitor) throws Exception {
 		CyNetworkView toNetworkView = viewMap.get(toNetwork.getSelectedValue());
+		if (toNetworkView == null){
+			return;
+		}
 		CyNetwork toNetwork = toNetworkView.getModel();
 		CyNetworkView fromNetworkView = viewMap.get(fromNetwork.getSelectedValue());
 
@@ -175,6 +165,7 @@ public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, z);
+			
 		}
 		Double x_center = fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
 		Double y_center = fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
@@ -190,11 +181,12 @@ public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH));
 		toNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR,
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR));
-		copyResult =  new CopyLayoutParameters();
+		copyResult =  new CopycatLayoutParameters();
 		copyResult.toColumn = toColumn.getSelectedValue();
 		copyResult.fromColumn = fromColumn.getSelectedValue();
 		copyResult.toNetwork = toNetwork.getRow(toNetwork).get(CyNetwork.NAME, String.class);
 		
+	
 	}
 
 	private List<String> getColumnNames(CyNetworkView netView) {
@@ -218,7 +210,7 @@ public class CopyLayoutTask extends AbstractTask implements ObservableTask {
 		if (type.equals(String.class)) {
 			return (R) (copyResult != null ? "Copied " + copyResult.fromColumn + " in " + name + " onto "
 					+ copyResult.toColumn + " in " + copyResult.toNetwork + "." : "No result columns available");
-		} else if (type.isAssignableFrom(CopyLayoutParameters.class)) {
+		} else if (type.isAssignableFrom(CopycatLayoutParameters.class)) {
 			return (R) copyResult;
 		}
 		return null;

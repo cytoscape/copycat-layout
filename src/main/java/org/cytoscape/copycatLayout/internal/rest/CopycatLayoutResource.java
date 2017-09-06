@@ -1,4 +1,4 @@
-package org.cytoscape.copyLayout.internal.rest;
+package org.cytoscape.copycatLayout.internal.rest;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import org.cytoscape.ci.CIExceptionFactory;
 import org.cytoscape.ci.CIResponseFactory;
 import org.cytoscape.ci.model.CIError;
 import org.cytoscape.ci.model.CIResponse;
-import org.cytoscape.copyLayout.internal.task.CopyLayoutTaskFactory;
+import org.cytoscape.copycatLayout.internal.task.CopycatLayoutTaskFactory;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkManager;
@@ -39,16 +39,16 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
-@Api(tags = { "Apps: Copy Layout" })
-@Path("/v1/layout/")
-public class CopyLayoutResource {
+@Api(tags = { "Layouts" })
+@Path("/v1/apply/layouts/copycat/")
+public class CopycatLayoutResource {
 
 	private final CyApplicationManager cyApplicationManager;
 
 	private final CyNetworkManager cyNetworkManager;
 	private final CyNetworkViewManager cyNetworkViewManager;
 
-	private final CopyLayoutTaskFactory copyLayoutTaskFactory;
+	private final CopycatLayoutTaskFactory copyLayoutTaskFactory;
 	private final SynchronousTaskManager<?> taskManager;
 
 	private final CIExceptionFactory ciExceptionFactory;
@@ -63,9 +63,9 @@ public class CopyLayoutResource {
 			+ "setting the node location and view scale to match. This makes visually comparing networks simple." + '\n'
 			+ '\n';
 
-	public CopyLayoutResource(final CyApplicationManager cyApplicationManager,
+	public CopycatLayoutResource(final CyApplicationManager cyApplicationManager,
 			final SynchronousTaskManager<?> taskManager, final CyNetworkManager cyNetworkManager,
-			final CyNetworkViewManager cyNetworkViewManager, final CopyLayoutTaskFactory copyLayoutTaskFactory,
+			final CyNetworkViewManager cyNetworkViewManager, final CopycatLayoutTaskFactory copyLayoutTaskFactory,
 			final CIResponseFactory ciResponseFactory, final CIExceptionFactory ciExceptionFactory,
 			final CIErrorFactory ciErrorFactory) {
 		this.cyApplicationManager = cyApplicationManager;
@@ -79,9 +79,9 @@ public class CopyLayoutResource {
 
 	}
 
-	private static final Logger logger = LoggerFactory.getLogger(CopyLayoutResource.class);
+	private static final Logger logger = LoggerFactory.getLogger(CopycatLayoutResource.class);
 
-	private final static String resourceErrorRoot = "urn:cytoscape:ci:copyLayout-app:v1";
+	private final static String resourceErrorRoot = "urn:cytoscape:ci:copycatLayout-app:v1";
 
 	private CIError buildCIError(int status, String resourcePath, String code, String message, Exception e) {
 		return ciErrorFactory.getCIError(status, resourceErrorRoot + ":" + resourcePath + ":" + code, message);
@@ -160,21 +160,21 @@ public class CopyLayoutResource {
 				new CIError[] { this.buildCIError(404, resourcePath, errorType, messageString, null) });
 	}
 
-	@ApiModel(value = "Copy Layout Response", description = "Copy Layout Results in CI Format", parent = CIResponse.class)
-	public static class CopyLayoutResponse extends CIResponse<CopyLayoutParameters> {
+	@ApiModel(value = "Copycat Layout Response", description = "Copycat Layout Results in CI Format", parent = CIResponse.class)
+	public static class CopycatLayoutResponse extends CIResponse<CopycatLayoutParameters> {
 	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("currentView/copy")
-	@ApiOperation(value = "Copy the current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopyLayoutResponse.class)
+	@Path("currentView")
+	@ApiOperation(value = "Copy the current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network or Network View does not exist", response = CIResponse.class) })
 	public Response copyLayout(
-			@ApiParam(value = "Copy Layout Parameters", required = true) CopyLayoutParameters copyLayoutParameters) {
-		CyNetwork cyNetwork = getCyNetwork("copy_current_layout", CY_NETWORK_NOT_FOUND_CODE);
-		CyNetworkView cyNetworkView = getCyNetworkView("copy_current_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE);
+			@ApiParam(value = "Copycat Layout Parameters", required = true) CopycatLayoutParameters copyLayoutParameters) {
+		CyNetwork cyNetwork = getCyNetwork("copycat_current_layout", CY_NETWORK_NOT_FOUND_CODE);
+		CyNetworkView cyNetworkView = getCyNetworkView("copycat_current_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE);
 
 		return copyLayout(cyNetwork.getSUID(), cyNetworkView.getSUID(), copyLayoutParameters);
 	}
@@ -182,18 +182,18 @@ public class CopyLayoutResource {
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("{networkSUID}/views/{networkViewSUID}/copy")
-	@ApiOperation(value = "Execute copy layout on a specific network view", notes = GENERIC_SWAGGER_NOTES, response = CopyLayoutResponse.class)
+	@Path("{networkSUID}/views/{networkViewSUID}")
+	@ApiOperation(value = "Execute copycat layout on a specific network view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
 	@ApiResponses(value = { @ApiResponse(code = 404, message = "Network does not exist", response = CIResponse.class) })
 
 	public Response copyLayout(
 			@ApiParam(value = "Network SUID (see GET /v1/networks)") @PathParam("networkSUID") long networkSUID,
 			@ApiParam(value = "Network View SUID (see GET /v1/networks/{networkId}/views)") @PathParam("networkViewSUID") long networkViewSUID,
-			@ApiParam(value = "Copy Layout Parameters", required = true) CopyLayoutParameters copyLayoutParameters) {
+			@ApiParam(value = "Copycat Layout Parameters", required = true) CopycatLayoutParameters copyLayoutParameters) {
 
-		CyNetworkView cyNetworkView = getCyNetworkView("copy_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE, networkSUID,
+		CyNetworkView cyNetworkView = getCyNetworkView("copycat_layout", CY_NETWORK_VIEW_NOT_FOUND_CODE, networkSUID,
 				networkViewSUID);
-		CopyLayoutTaskObserver taskObserver = new CopyLayoutTaskObserver(this, "copy_layout", TASK_EXECUTION_ERROR_CODE);
+		CopycatLayoutTaskObserver taskObserver = new CopycatLayoutTaskObserver(this, "copycat_layout", TASK_EXECUTION_ERROR_CODE);
 
 		Map<String, Object> tunableMap = new HashMap<String, Object>();
 
@@ -210,7 +210,7 @@ public class CopyLayoutResource {
 		}
 		if (!cols.contains(copyLayoutParameters.fromColumn)){
 			String errorString = "Source column does not describe a column in the source network";
-			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copycat_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		
 		fromColumn.setPossibleValues(cols);
@@ -223,7 +223,7 @@ public class CopyLayoutResource {
 		}
 		if (!networkNames.contains(copyLayoutParameters.toNetwork)){
 			String errorString = "Target network not found";
-			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copycat_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		toNetwork.setPossibleValues(networkNames);
 		toNetwork.setSelectedValue(copyLayoutParameters.toNetwork);
@@ -243,7 +243,7 @@ public class CopyLayoutResource {
 		
 		if (!toCols.contains(copyLayoutParameters.toColumn)){
 			String errorString = "Target column does not describe a column in the target network";
-			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(404, new CIError[]{this.buildCIError(404, "copycat_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 		}
 		
 		toColumnNames.add(copyLayoutParameters.toColumn);
@@ -253,7 +253,7 @@ public class CopyLayoutResource {
 
 		if (fromNetwork.getSelectedValue().equals(toNetwork.getSelectedValue())) {
 			String errorString = "Source and target layout network are the same";
-			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(400, "copy_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
+			throw ciExceptionFactory.getCIException(400, new CIError[]{this.buildCIError(400, "copycat_layout", TASK_EXECUTION_ERROR_CODE, errorString, null)});		
 			
 		}
 		tunableMap.put("fromNetwork", fromNetwork);
