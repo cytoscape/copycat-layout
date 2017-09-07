@@ -117,6 +117,19 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	}
 
+	public CopycatLayoutTask(CyNetworkViewManager viewManager) {
+		super();
+
+		viewMap = new HashMap<String, CyNetworkView>();
+
+		for (CyNetworkView v : viewManager.getNetworkViewSet()) {
+			viewMap.put(getName(v), v);
+		}
+
+		toNetwork = new ListSingleSelection<String>(new ArrayList<String>(viewMap.keySet()));
+		fromNetwork = new ListSingleSelection<String>(new ArrayList<String>(viewMap.keySet()));
+	}
+
 	@ProvidesTitle
 	public String getTitle() {
 		return "Copycat Layout";
@@ -165,7 +178,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, x);
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, y);
 			targetNodeView.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, z);
-			
+
 		}
 		Double x_center = fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
 		Double y_center = fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
@@ -181,12 +194,11 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH));
 		toNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR,
 				fromNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR));
-		copyResult =  new CopycatLayoutParameters();
+		copyResult = new CopycatLayoutParameters();
 		copyResult.toColumn = toColumn.getSelectedValue();
 		copyResult.fromColumn = fromColumn.getSelectedValue();
 		copyResult.toNetwork = toNetwork.getRow(toNetwork).get(CyNetwork.NAME, String.class);
-		
-	
+
 	}
 
 	private List<String> getColumnNames(CyNetworkView netView) {

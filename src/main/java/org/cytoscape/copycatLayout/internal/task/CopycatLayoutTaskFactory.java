@@ -15,8 +15,7 @@ public class CopycatLayoutTaskFactory extends AbstractNetworkViewTaskFactory {
 
 	public TaskIterator createTaskIterator(CyNetworkView arg0) {
 		if (arg0 == null) {
-			return null;
-			//return new TaskIterator(new CopycatLayoutTask(viewManager));
+			return new TaskIterator(new CopycatLayoutTask(viewManager));
 		}
 		return new TaskIterator(new CopycatLayoutTask(arg0, viewManager));
 	}
