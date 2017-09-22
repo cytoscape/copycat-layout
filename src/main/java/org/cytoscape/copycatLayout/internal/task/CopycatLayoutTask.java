@@ -1,5 +1,9 @@
 package org.cytoscape.copycatLayout.internal.task;
 
+import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_X_LOCATION;
+import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_Y_LOCATION;
+
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,14 +11,20 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutResult;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.task.NetworkViewLocationTaskFactory;
+import org.cytoscape.view.layout.AbstractLayoutTask;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
+import org.cytoscape.view.layout.internal.algorithms.GridNodeLayout;
+import org.cytoscape.view.layout.internal.algorithms.GridNodeLayoutContext;
+import org.cytoscape.view.layout.internal.algorithms.GridNodeLayoutTask;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
@@ -37,6 +47,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	private static final String displayName = "Copycat";
 	protected final CyLayoutAlgorithmManager algoManager;
 	protected CopycatLayoutResult result;
+	private final TaskIterator ti;
 
 	private List<String> getValidColumnNames(CyNetworkView netView) {
 		if (netView == null)
@@ -148,9 +159,10 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	}
 
 	public CopycatLayoutTask(final CyApplicationManager cyApplicationManager, final CyNetworkViewManager viewManager,
-			final CyLayoutAlgorithmManager algoManager) {
+			final CyLayoutAlgorithmManager algoManager, final TaskIterator ti) {
 		super();
 		this.algoManager = algoManager;
+		this.ti = ti;
 		viewMap = new HashMap<String, CyNetworkView>();
 
 		for (CyNetworkView v : viewManager.getNetworkViewSet()) {
@@ -179,18 +191,6 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		sourceColumn.setSelectedValue("name");
 	}
 
-	private class SameNetworkError extends Exception {
-	}
-
-	private class NetworkNotFoundError extends Exception {
-	}
-
-	private class InvalidColumnError extends Exception {
-	}
-
-	private class ColumnTypeMismatchError extends Exception {
-	}
-
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -211,31 +211,34 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		if (targetNetworkView == null) {
 			logger.error("Target network not found");
-			throw new NetworkNotFoundError();
+			throw new NetworkNotFoundError("Target network not found");
 		}
 		if (sourceNetworkView == null) {
 			logger.error("Source network not found");
-			throw new NetworkNotFoundError();
+			throw new NetworkNotFoundError("Source network not found");
 		}
 
 		if (targetNetworkView.equals(sourceNetworkView)) {
 			logger.error("Source and target network must be different");
+
 			throw new SameNetworkError();
 		}
 
 		CyNetwork targetNetwork = targetNetworkView.getModel();
 		CyNetwork sourceNetwork = sourceNetworkView.getModel();
-		
+
 		CyColumn sourceCol = sourceNetwork.getDefaultNodeTable().getColumn(sourceColumnName);
 		if (sourceCol == null || !(sourceCol.getType() == String.class || sourceCol.getType() == Integer.class)) {
 			logger.error("Source column not found or invalid. Must be existing String or Integer column");
-			throw new InvalidColumnError();
+			throw new InvalidColumnError(
+					"Source column not found or invalid. Must be existing String or Integer column");
 		}
 		CyColumn targetCol = targetNetwork.getDefaultNodeTable().getColumn(targetColumnName);
 
 		if (targetCol == null || !(targetCol.getType() == String.class || targetCol.getType() == Integer.class)) {
 			logger.error("Target column not found or invalid. Must be existing String or Integer column");
-			throw new InvalidColumnError();
+			throw new InvalidColumnError(
+					"Target column not found or invalid. Must be existing String or Integer column");
 		}
 
 		if (sourceCol.getType() != targetCol.getType()) {
@@ -257,9 +260,9 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		HashSet<View<CyNode>> sourceUnmapped = new HashSet<View<CyNode>>(sourceMap.values()),
 				targetUnmapped = new HashSet<View<CyNode>>();
 		int mappedNodeCount = 0;
-		
-		double maxX = 0, maxY = 0;
-		
+
+		double maxX = 0, minY = Double.MAX_VALUE;
+
 		for (View<CyNode> nodeView : targetNetworkView.getNodeViews()) {
 			Object val = targetNetwork.getRow(nodeView.getModel()).get(targetColumnName, cls);
 			if (sourceMap.containsKey(val)) {
@@ -267,8 +270,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 				sourceUnmapped.remove(sourceMap.get(val));
 				mappedNodeCount++;
 				maxX = Math.max(maxX, nodeView.getVisualProperty(BasicVisualLexicon.NODE_X_LOCATION));
-				maxY = Math.max(maxY, nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION));
-				
+				minY = Math.min(minY, nodeView.getVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION));
+
 			} else {
 				targetUnmapped.add(nodeView);
 			}
@@ -287,41 +290,67 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		if (gridUnmapped) {
 			// Move off to side
-			for (View<CyNode> nodeView : targetUnmapped){
+			for (View<CyNode> nodeView : targetUnmapped) {
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, maxX + 200);
-				nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, maxY + 200);	
+				nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, minY);
 			}
-			
+
 			CyLayoutAlgorithm algo = algoManager.getLayout("grid");
+			
 			if (targetUnmapped.size() > 0) {
-				TaskIterator targetIterator = algo.createTaskIterator(targetNetworkView, algo.getDefaultLayoutContext(),
-						targetUnmapped, targetColumnName);
-				targetIterator.next().run(taskMonitor);
+				grid(targetUnmapped, 80, 40);
 			}
-			
-			
-			// TODO : shift nodes off to the side
 		}
-
-		Double x_center = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION);
-		Double y_center = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION);
-		Double z_center = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION);
-
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_X_LOCATION, x_center);
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Y_LOCATION, y_center);
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_CENTER_Z_LOCATION, z_center);
-
-		Double height = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT);
-		Double width = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_WIDTH);
-		Double scale = sourceNetworkView.getVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR);
-
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_HEIGHT, height);
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_WIDTH, width);
-		targetNetworkView.setVisualProperty(BasicVisualLexicon.NETWORK_SCALE_FACTOR, scale);
+		ti.append(new CopyNetworkViewLocationTask(sourceNetworkView, targetNetworkView));
 
 		result = new CopycatLayoutResult();
 		result.mappedNodeCount = mappedNodeCount;
 		result.unmappedNodeCount = targetUnmapped.size();
+	}
+	
+	private void grid(Set<View<CyNode>> nodesToLayOut, int nodeHorizontalSpacing, int nodeVerticalSpacing){
+		double currX = 0.0d;
+		double currY = 0.0d;
+		double initialX = 0.0d;
+		double initialY = 0.0d;
+
+		// Yes, our size and starting points need to be different
+		final int nodeCount = nodesToLayOut.size();
+		final int columns = (int) Math.sqrt(nodeCount);
+
+		// Calculate our starting point as the geographical center of the
+		// selected nodes.
+		for (final View<CyNode> nView : nodesToLayOut) {
+			initialX += (nView.getVisualProperty(NODE_X_LOCATION) / nodeCount);
+			initialY += (nView.getVisualProperty(NODE_Y_LOCATION) / nodeCount);
+		}
+
+		// initialX and initialY reflect the center of our grid, so we
+		// need to offset by distance*columns/2 in each direction
+		initialX = initialX - ((nodeHorizontalSpacing * (columns - 1)) / 2);
+		initialY = initialY - ((nodeVerticalSpacing * (columns - 1)) / 2);
+		currX = initialX;
+		currY = initialY;
+
+		int count = 0;
+
+		// Set visual property.
+		// TODO: We need batch apply method for Visual Property values for
+		// performance.
+		for (final View<CyNode> nView : nodesToLayOut) {
+			nView.setVisualProperty(NODE_X_LOCATION, currX);
+			nView.setVisualProperty(NODE_Y_LOCATION, currY);
+
+			count++;
+
+			if (count == columns) {
+				count = 0;
+				currX = initialX;
+				currY += nodeVerticalSpacing;
+			} else {
+				currX += nodeHorizontalSpacing;
+			}
+		}
 	}
 
 	private void copyNodeLocation(View<CyNode> source, View<CyNode> target) {
@@ -338,6 +367,50 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	@Override
 	public <R> R getResults(Class<? extends R> type) {
 		return (R) result;
+	}
+
+	private class SameNetworkError extends Exception {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public SameNetworkError() {
+			super("Source and target network must be different");
+		}
+	}
+
+	private class NetworkNotFoundError extends Exception {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public NetworkNotFoundError(String message) {
+			super(message);
+		}
+	}
+
+	private class InvalidColumnError extends Exception {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public InvalidColumnError(String message) {
+			super(message);
+		}
+	}
+
+	private class ColumnTypeMismatchError extends Exception {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		public ColumnTypeMismatchError() {
+			super("Column type must be existing String or Integer");
+		}
 	}
 
 }

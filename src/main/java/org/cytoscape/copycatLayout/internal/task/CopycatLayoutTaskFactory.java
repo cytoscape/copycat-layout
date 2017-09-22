@@ -21,7 +21,10 @@ public class CopycatLayoutTaskFactory extends AbstractTaskFactory {
 	
 	@Override
 	public TaskIterator createTaskIterator() {
-		return new TaskIterator(new CopycatLayoutTask(appManager, viewManager, algoManager));
+		TaskIterator ti = new TaskIterator();
+		CopycatLayoutTask task = new CopycatLayoutTask(appManager, viewManager, algoManager, ti);
+		ti.append(task);
+		return ti;
 	}
 	
 	@Override
