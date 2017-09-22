@@ -1,26 +1,31 @@
 package org.cytoscape.copycatLayout.internal.task;
 
-import org.cytoscape.task.AbstractNetworkViewTaskFactory;
-import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewManager;
+import org.cytoscape.work.AbstractTaskFactory;
 import org.cytoscape.work.TaskIterator;
 
-public class CopycatLayoutTaskFactory extends AbstractNetworkViewTaskFactory {
-	CyNetworkViewManager viewManager;
+public class CopycatLayoutTaskFactory extends AbstractTaskFactory {
+	private final CyNetworkViewManager viewManager;
+	private final CyLayoutAlgorithmManager algoManager;
+	private final CyApplicationManager appManager;
 
-	public CopycatLayoutTaskFactory(CyNetworkViewManager viewManager) {
+	public CopycatLayoutTaskFactory(final CyApplicationManager appManager, final CyNetworkViewManager viewManager,
+			final CyLayoutAlgorithmManager algoManager) {
 		super();
 		this.viewManager = viewManager;
+		this.algoManager = algoManager;
+		this.appManager = appManager;
 	}
-
-	public TaskIterator createTaskIterator(CyNetworkView arg0) {
-		if (arg0 == null) {
-			return new TaskIterator(new CopycatLayoutTask(viewManager));
-		}
-		return new TaskIterator(new CopycatLayoutTask(arg0, viewManager));
+	
+	@Override
+	public TaskIterator createTaskIterator() {
+		return new TaskIterator(new CopycatLayoutTask(appManager, viewManager, algoManager));
 	}
-
-	public boolean isReady(CyNetworkView arg0) {
+	
+	@Override
+	public boolean isReady() {
 		return viewManager.getNetworkViewSet().size() >= 2;
 	}
 

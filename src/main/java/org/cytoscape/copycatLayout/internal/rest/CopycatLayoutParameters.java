@@ -4,18 +4,15 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * Parameters for passing to MapLayoutTask
+ * Parameters for passing to CopycatLayoutTask
  * 
  * @author brettjsettle
  *
  */
-
 @ApiModel(value="Copycat Layout Parameters", description="Parameters for copying one layout onto another")
-public class CopycatLayoutParameters {
-	@ApiModelProperty(value = "A node column used to copy nodes in the source network to nodes in the target network")
-	public String fromColumn;
-	@ApiModelProperty(value = "The name of the network view that is receiving the copied layout")
-	public String toNetwork;
-	@ApiModelProperty(value = "A node column used to copy nodes in the target network to nodes in the source network")
-	public String toColumn;
+public class CopycatLayoutParameters extends CopycatWithViewSUIDsLayoutParameters {
+	@ApiModelProperty(value = "The SUID of the network view whose layout is being copied", required=true)
+	public long sourceNetworkViewSUID;
+	@ApiModelProperty(value = "The SUID of the network view that is receiving the copied layout", required = true)
+	public long targetNetworkViewSUID;
 }

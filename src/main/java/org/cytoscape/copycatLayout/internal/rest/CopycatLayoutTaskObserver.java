@@ -22,12 +22,12 @@ public class CopycatLayoutTaskObserver implements TaskObserver {
 		return response;
 	}
 
-	private CopycatLayoutParameters result;
+	private CopycatLayoutResult result;
 	private String resourcePath;
 	private String errorCode;
 
-	public CopycatLayoutTaskObserver(CopycatLayoutResource copyLayoutResource, String resourcePath, String errorCode) {
-		this.copyLayoutResource = copyLayoutResource;
+	public CopycatLayoutTaskObserver(CopycatLayoutResource copycatLayoutResource, String resourcePath, String errorCode) {
+		this.copyLayoutResource = copycatLayoutResource;
 		response = null;
 		this.resourcePath = resourcePath;
 		this.errorCode = errorCode;
@@ -36,9 +36,9 @@ public class CopycatLayoutTaskObserver implements TaskObserver {
 	@SuppressWarnings("unchecked")
 	public void allFinished(FinishStatus arg0) {
 		if (arg0.getType() == FinishStatus.Type.SUCCEEDED || arg0.getType() == FinishStatus.Type.CANCELLED) {
-			response = new CIResponse<CopycatLayoutParameters>();
+			response = new CIResponse<CopycatLayoutResult>();
 			
-			((CIResponse<CopycatLayoutParameters>) response).data = result;
+			((CIResponse<CopycatLayoutResult>) response).data = result;
 			response.errors = new ArrayList<CIError>();
 		} else {
 			response = this.copyLayoutResource.buildCIErrorResponse(
@@ -50,7 +50,7 @@ public class CopycatLayoutTaskObserver implements TaskObserver {
 
 	
 	public void taskFinished(ObservableTask arg0) {
-		CopycatLayoutParameters res = arg0.getResults(CopycatLayoutParameters.class);
+		CopycatLayoutResult res = arg0.getResults(CopycatLayoutResult.class);
 		result = res;
 	}
 }
