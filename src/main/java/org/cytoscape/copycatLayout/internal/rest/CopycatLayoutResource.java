@@ -158,7 +158,6 @@ public class CopycatLayoutResource {
 		}
 		return name;
 	}
-	
 
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
@@ -167,17 +166,19 @@ public class CopycatLayoutResource {
 	@ApiOperation(value = "Copy network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
-	public Response copyCurrentLayout(@PathParam("sourceViewSUID") Long sourceViewSUID, @PathParam("targetViewSUID") Long targetViewSUID,
+	public Response copyCurrentLayout(
+			@PathParam("sourceViewSUID") @ApiParam(value = "Source network view SUID (or \"current\")") Long sourceViewSUID,
+			@PathParam("targetViewSUID") @ApiParam(value="Target network view SUID (or \"current\")") Long targetViewSUID,
 			@ApiParam(value = "Clone the specified network view layout onto another network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
-	
+
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/current/{targetViewSUID}")
-	@ApiOperation(hidden=true, value = "Copy current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
+	@ApiOperation(hidden = true, value = "Copy current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
 	public Response copyCurrentLayout(@PathParam("targetViewSUID") Long targetViewSUID,
@@ -191,11 +192,12 @@ public class CopycatLayoutResource {
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
+
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Path("/{sourceViewSUID}/current")
-	@ApiOperation(hidden=true, value = "Copy a network view layout to the current view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
+	@ApiOperation(hidden = true, value = "Copy a network view layout to the current view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
 	public Response copyToCurrentLayout(@PathParam("sourceViewSUID") Long sourceViewSUID,
@@ -210,29 +212,39 @@ public class CopycatLayoutResource {
 				params.selectUnmapped, params.gridUnmapped);
 	}
 	/*
-	@PUT
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/")
-	@ApiOperation(value = "Copy one network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResult.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
-	public Response copyLayout(
-			@ApiParam(value = "Copycat Layout Parameters", required = true) CopycatLayoutParameters params) {
-		return copyLayout(params.sourceNetworkViewSUID, params.sourceColumn, params.targetNetworkViewSUID,
-				params.targetColumn, params.selectUnmapped, params.gridUnmapped);
+	 * @PUT
+	 * 
+	 * @Produces(MediaType.APPLICATION_JSON)
+	 * 
+	 * @Consumes(MediaType.APPLICATION_JSON)
+	 * 
+	 * @Path("/")
+	 * 
+	 * @ApiOperation(value = "Copy one network view layout to another view",
+	 * notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResult.class)
+	 * 
+	 * @ApiResponses(value = {
+	 * 
+	 * @ApiResponse(code = 404, message = "Network View does not exist",
+	 * response = CIResponse.class) }) public Response copyLayout(
+	 * 
+	 * @ApiParam(value = "Copycat Layout Parameters", required = true)
+	 * CopycatLayoutParameters params) { return
+	 * copyLayout(params.sourceNetworkViewSUID, params.sourceColumn,
+	 * params.targetNetworkViewSUID, params.targetColumn, params.selectUnmapped,
+	 * params.gridUnmapped);
+	 * 
+	 * }
+	 */
 
-	}
-	*/
-	
 	private Response copyLayout(long sourceViewSUID, String sourceColumn, long targetViewSUID, String targetColumn,
 			boolean selectUnmapped, boolean gridUnmapped) {
 		CopycatLayoutTaskObserver taskObserver = new CopycatLayoutTaskObserver(this, "copycat_layout",
 				TASK_EXECUTION_ERROR);
 		Map<String, Object> tunableMap = new HashMap<String, Object>();
-		
+
 		TaskIterator taskIterator = copycatLayoutTaskFactory.createTaskIterator();
-		
+
 		String sourceName = validateNetworkName(sourceViewSUID, sourceColumn, "Source");
 		String targetName = validateNetworkName(targetViewSUID, targetColumn, "Target");
 
@@ -240,32 +252,31 @@ public class CopycatLayoutResource {
 			throw ciExceptionFactory.getCIException(400, new CIError[] { buildCIError(400, "copycat-layout",
 					TASK_EXECUTION_ERROR, "Source and destination network views cannot be the same.", null) });
 		}
-		
+
 		ListSingleSelection<String> sourceList = new ListSingleSelection<String>(sourceName);
 		sourceList.setSelectedValue(sourceName);
-		
+
 		ListSingleSelection<String> sourceColumnList = new ListSingleSelection<String>(sourceColumn);
 		sourceColumnList.setSelectedValue(sourceColumn);
-		
+
 		ListSingleSelection<String> targetList = new ListSingleSelection<String>(targetName);
 		targetList.setSelectedValue(targetName);
-		
+
 		ListSingleSelection<String> targetColumnList = new ListSingleSelection<String>(targetColumn);
 		targetColumnList.setSelectedValue(targetColumn);
-		
-		
+
 		tunableMap.put("sourceNetwork", sourceList);
 		tunableMap.put("targetNetwork", targetList);
 
 		tunableMap.put("sourceColumn", sourceColumnList);
 		tunableMap.put("targetColumn", targetColumnList);
-		
+
 		tunableMap.put("selectUnmapped", selectUnmapped);
 		tunableMap.put("gridUnmapped", gridUnmapped);
 
 		taskManager.setExecutionContext(tunableMap);
 		taskManager.execute(taskIterator, taskObserver);
-		
+
 		return Response
 				.status(taskObserver.response.errors.size() == 0 ? Response.Status.OK
 						: Response.Status.INTERNAL_SERVER_ERROR)
