@@ -3,7 +3,6 @@ package org.cytoscape.copycatLayout.internal.task;
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_X_LOCATION;
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_Y_LOCATION;
 
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,13 +17,8 @@ import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutResult;
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
-import org.cytoscape.task.NetworkViewLocationTaskFactory;
-import org.cytoscape.view.layout.AbstractLayoutTask;
 import org.cytoscape.view.layout.CyLayoutAlgorithm;
 import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
-import org.cytoscape.view.layout.internal.algorithms.GridNodeLayout;
-import org.cytoscape.view.layout.internal.algorithms.GridNodeLayoutContext;
-import org.cytoscape.view.layout.internal.algorithms.GridNodeLayoutTask;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.view.model.View;
@@ -295,8 +289,6 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, minY);
 			}
 
-			CyLayoutAlgorithm algo = algoManager.getLayout("grid");
-			
 			if (targetUnmapped.size() > 0) {
 				grid(targetUnmapped, 80, 40);
 			}
