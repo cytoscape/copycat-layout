@@ -6,8 +6,4 @@
 BASE_URL = "http://127.0.0.1"  # at UCSD
 ## BASE_URL = "http://192.168.50.129"  # at home
 
-
-NDEX_USER_ID="ndex2 cytoapp test"
-NDEX_USER_PASSWORD="ndex2"
-
 IMPOSSIBLE_URL = "http://impossible"

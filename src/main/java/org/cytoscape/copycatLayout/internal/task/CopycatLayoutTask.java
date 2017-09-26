@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutResult;
@@ -76,6 +78,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	public void setsourceNetwork(ListSingleSelection<String> mfn) {
 		if (sourceNetwork != null && mfn.getSelectedValue().equals(sourceNetwork.getSelectedValue()))
 			return;
+
 		sourceNetwork = mfn;
 		CyNetworkView fromNetworkView = viewMap.get(sourceNetwork.getSelectedValue());
 		sourceColumn = new ListSingleSelection<String>(getValidColumnNames(fromNetworkView));
@@ -101,12 +104,14 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	@Tunable(description = "Target network view", required = true, gravity = 3.0)
 	public ListSingleSelection<String> gettargetNetwork() {
+
 		return targetNetwork;
 	}
 
 	public void settargetNetwork(ListSingleSelection<String> mtn) {
 		if (targetNetwork != null && mtn.getSelectedValue().equals(targetNetwork.getSelectedValue()))
 			return;
+
 		targetNetwork = mtn;
 		CyNetworkView fromNetworkView = viewMap.get(targetNetwork.getSelectedValue());
 		targetColumn = new ListSingleSelection<String>(getValidColumnNames(fromNetworkView));
@@ -184,6 +189,16 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		sourceColumn.setSelectedValue("name");
 	}
 
+	void showError(final String message, final String title) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+			}
+		});
+
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * 
@@ -212,9 +227,9 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		}
 
 		if (targetNetworkView.equals(sourceNetworkView)) {
-			logger.error("Source and target network must be different");
-
-			throw new SameNetworkError();
+			logger.warn("Source and target network must be different");
+			showError("Source and target network must be different", "Invalid Network Views");
+			return;
 		}
 
 		CyNetwork targetNetwork = targetNetworkView.getModel();
@@ -236,7 +251,9 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		if (sourceCol.getType() != targetCol.getType()) {
 			logger.error("Column types must match to map correctly");
-			throw new ColumnTypeMismatchError();
+			// TODO: don't throw error, inform user and return
+			showError("Source and target column must be the same type", "Invalid Column Types");
+			return;
 		}
 		Class<?> cls = sourceCol.getType();
 
@@ -298,8 +315,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		result.mappedNodeCount = mappedNodeCount;
 		result.unmappedNodeCount = targetUnmapped.size();
 	}
-	
-	private void grid(Set<View<CyNode>> nodesToLayOut, int nodeHorizontalSpacing, int nodeVerticalSpacing){
+
+	private void grid(Set<View<CyNode>> nodesToLayOut, int nodeHorizontalSpacing, int nodeVerticalSpacing) {
 		double currX = 0.0d;
 		double currY = 0.0d;
 		double initialX = 0.0d;
@@ -360,17 +377,6 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		return (R) result;
 	}
 
-	private class SameNetworkError extends Exception {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		public SameNetworkError() {
-			super("Source and target network must be different");
-		}
-	}
-
 	private class NetworkNotFoundError extends Exception {
 		/**
 		 * 
@@ -390,17 +396,6 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		public InvalidColumnError(String message) {
 			super(message);
-		}
-	}
-
-	private class ColumnTypeMismatchError extends Exception {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-
-		public ColumnTypeMismatchError() {
-			super("Column type must be existing String or Integer");
 		}
 	}
 

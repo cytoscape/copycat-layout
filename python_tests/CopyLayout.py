@@ -10,20 +10,17 @@ class CopyLayout:
         """ Constructor remembers CyREST location """
         self._cy_caller = CyCaller(cy_rest_instance)
 
-    def copyLayout(self, toNetwork, fromNetwork=None, fromColumn="name", toColumn="name"):
+    def copyLayout(self, toSUID=None, fromSUID=None, **args):
         """ copy the layout from one network view onto another """
-        ids = self._cy_caller.execute_get('/v1/networks.names')
-        mapping = {a['name']: a['SUID'] for a in ids}
+        
 
-        params = json.dumps({"fromColumn": fromColumn, "toNetwork": toNetwork, "toColumn": toColumn})
-
-        if fromNetwork is not None:
-            for net in (fromNetwork, toNetwork):
-                if net not in mapping:
-                    raise Exception("Failed to find network with name %s" % net)
-            networkSUID = mapping[fromNetwork]
-            networkViewSUID = self._cy_caller.execute_get('/v1/networks/%d/views' % networkSUID)
-            networkViewSUID = networkViewSUID[0]
-            return self._cy_caller.execute_post("/v1/layout/%d/views/%d/copy" % (networkSUID, networkViewSUID), params)
+        params = json.dumps(args)
+        if (toSUID == None and fromSUID == None):
+            raise Exception("No target or source")
+        elif toSUID != None and fromSUID != None:
+            return self._cy_caller.execute_put("/v1/apply/layouts/copycat/%d/%d" % (fromSUID, toSUID), params)
+        elif toSUID == None:
+            return self._cy_caller.execute_put("/v1/apply/layouts/copycat/%d/current/" % fromSUID, params)
         else:
-            return self._cy_caller.execute_post("/v1/layout/currentView/copy", params)
+            return self._cy_caller.execute_put("/v1/apply/layouts/copycat/current/%d" % toSUID, params)
+

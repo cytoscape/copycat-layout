@@ -168,8 +168,10 @@ public class CopycatLayoutResource {
 			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
 	public Response copyCurrentLayout(
 			@PathParam("sourceViewSUID") @ApiParam(value = "Source network view SUID (or \"current\")") Long sourceViewSUID,
-			@PathParam("targetViewSUID") @ApiParam(value="Target network view SUID (or \"current\")") Long targetViewSUID,
-			@ApiParam(value = "Clone the specified network view layout onto another network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
+			@PathParam("targetViewSUID") @ApiParam(value = "Target network view SUID (or \"current\")") Long targetViewSUID,
+			@ApiParam(value = "Clone the specified network view layout onto another network view") CopycatWithViewSUIDsLayoutParameters params) {
+		if (params == null)
+			params = new CopycatWithViewSUIDsLayoutParameters();
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
@@ -189,6 +191,8 @@ public class CopycatLayoutResource {
 					SOURCE_NETWORK_VIEW_NOT_FOUND, "No current network selected", null) });
 		}
 		long sourceViewSUID = sourceView.getSUID();
+		if (params == null)
+			params = new CopycatWithViewSUIDsLayoutParameters();
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
@@ -208,6 +212,8 @@ public class CopycatLayoutResource {
 					TARGET_NETWORK_VIEW_NOT_FOUND, "No current network selected", null) });
 		}
 		long targetViewSUID = targetView.getSUID();
+		if (params == null)
+			params = new CopycatWithViewSUIDsLayoutParameters();
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
@@ -239,7 +245,7 @@ public class CopycatLayoutResource {
 
 	private Response copyLayout(long sourceViewSUID, String sourceColumn, long targetViewSUID, String targetColumn,
 			boolean selectUnmapped, boolean gridUnmapped) {
-		CopycatLayoutTaskObserver taskObserver = new CopycatLayoutTaskObserver(this, "copycat_layout",
+		CopycatLayoutTaskObserver taskObserver = new CopycatLayoutTaskObserver(this, "copycat-layout",
 				TASK_EXECUTION_ERROR);
 		Map<String, Object> tunableMap = new HashMap<String, Object>();
 
