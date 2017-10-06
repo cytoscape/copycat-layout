@@ -260,6 +260,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		HashMap<Object, View<CyNode>> sourceMap = new HashMap<Object, View<CyNode>>();
 
 		for (View<CyNode> nodeView : sourceNetworkView.getNodeViews()) {
+			if (cancelled)
+				return;
 			Object val = sourceMap.put(sourceNetwork.getRow(nodeView.getModel()).get(sourceColumnName, cls), nodeView);
 			if (val != null) {
 				logger.warn("Duplicate key in source");
@@ -274,6 +276,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		double maxX = 0, minY = Double.MAX_VALUE;
 
 		for (View<CyNode> nodeView : targetNetworkView.getNodeViews()) {
+			if (cancelled)
+				return;
 			Object val = targetNetwork.getRow(nodeView.getModel()).get(targetColumnName, cls);
 			if (sourceMap.containsKey(val)) {
 				copyNodeLocation(sourceMap.get(val), nodeView);
@@ -291,9 +295,13 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		if (selectUnmapped) {
 			for (View<CyNode> nodeView : sourceUnmapped) {
+				if (cancelled)
+					return;
 				sourceNetwork.getRow(nodeView.getModel()).set("selected", true);
 			}
 			for (View<CyNode> nodeView : targetUnmapped) {
+				if (cancelled)
+					return;
 				targetNetwork.getRow(nodeView.getModel()).set("selected", true);
 			}
 		}
@@ -301,6 +309,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		if (gridUnmapped) {
 			// Move off to side
 			for (View<CyNode> nodeView : targetUnmapped) {
+				if (cancelled)
+					return;
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_X_LOCATION, maxX + 200);
 				nodeView.setVisualProperty(BasicVisualLexicon.NODE_Y_LOCATION, minY);
 			}
@@ -329,6 +339,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		// Calculate our starting point as the geographical center of the
 		// selected nodes.
 		for (final View<CyNode> nView : nodesToLayOut) {
+			if (cancelled)
+				return;
 			initialX += (nView.getVisualProperty(NODE_X_LOCATION) / nodeCount);
 			initialY += (nView.getVisualProperty(NODE_Y_LOCATION) / nodeCount);
 		}
@@ -346,6 +358,8 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		// TODO: We need batch apply method for Visual Property values for
 		// performance.
 		for (final View<CyNode> nView : nodesToLayOut) {
+			if (cancelled)
+				return;
 			nView.setVisualProperty(NODE_X_LOCATION, currX);
 			nView.setVisualProperty(NODE_Y_LOCATION, currY);
 
