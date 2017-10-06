@@ -10,7 +10,7 @@
 		<maven-bundle-plugin.version>2.3.4</maven-bundle-plugin.version>
 		<osgi.api.version>4.2.0</osgi.api.version>
 		<maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
-		
+
 	</properties>
 
 	<groupId>org.cytoscape.copycatLayout</groupId>
@@ -70,6 +70,19 @@
 		</repository>
 	</repositories>
 
+	<distributionManagement>
+		<repository>
+			<id>releases</id>
+			<name>Internal Releases</name>
+			<url>http://code.cytoscape.org/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>snapshots</id>
+			<name>Internal Snapshots</name>
+			<url>http://code.cytoscape.org/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
 	<dependencies>
 	<!-- Common dependencies -->
 		<dependency>
@@ -91,7 +104,7 @@
 			<version>1.5.7</version>
 			<scope>provided</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
@@ -145,7 +158,7 @@
 			<artifactId>cxio</artifactId>
 			<version>1.1.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>ci-api</artifactId>
