@@ -136,7 +136,6 @@ public class CopycatLayoutResource {
 	}
 
 	private String validateNetworkName(long viewSUID, String column, String networkType) {
-		System.out.println("Validating " + viewSUID + " with " + column + " networkType " + networkType);
 		String name = null;
 		try {
 			name = getNetworkNameWithColumn(viewSUID, column);
@@ -255,7 +254,6 @@ public class CopycatLayoutResource {
 
 		String sourceName = validateNetworkName(sourceViewSUID, sourceColumn, "Source");
 		String targetName = validateNetworkName(targetViewSUID, targetColumn, "Target");
-		System.out.println("ok");
 		if (sourceViewSUID == targetViewSUID) {
 			throw ciExceptionFactory.getCIException(400, new CIError[] { buildCIError(400, "copycat-layout",
 					TASK_EXECUTION_ERROR, "Source and destination network views cannot be the same.", new Exception("Source and destination network views cannot be the same.")) });
