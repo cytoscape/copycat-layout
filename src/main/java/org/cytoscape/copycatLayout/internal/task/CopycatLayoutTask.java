@@ -171,17 +171,20 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		ListSingleSelection<String> targetList = new ListSingleSelection<String>(
 				new ArrayList<String>(viewMap.keySet()));
 		Iterator<String> names = viewMap.keySet().iterator();
+
 		CyNetworkView networkView = cyApplicationManager.getCurrentNetworkView();
 		if (networkView != null)
 			sourceList.setSelectedValue(getNetworkName(networkView));
-		else {
+		else if (names.hasNext()) {
 			sourceList.setSelectedValue(names.next());
 		}
 
-		String name = names.next();
-		if (name == sourceList.getSelectedValue())
-			name = names.next();
-		targetList.setSelectedValue(name);
+		if (names.hasNext()) {
+			String name = names.next();
+			if (name == sourceList.getSelectedValue())
+				name = names.next();
+			targetList.setSelectedValue(name);
+		}
 
 		setsourceNetwork(sourceList);
 		settargetNetwork(targetList);
