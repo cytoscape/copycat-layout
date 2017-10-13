@@ -181,7 +181,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		if (names.hasNext()) {
 			String name = names.next();
-			if (name == sourceList.getSelectedValue())
+			if (names.hasNext() && name == sourceList.getSelectedValue())
 				name = names.next();
 			targetList.setSelectedValue(name);
 		}

@@ -218,31 +218,6 @@ public class CopycatLayoutResource {
 		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
 				params.selectUnmapped, params.gridUnmapped);
 	}
-	/*
-	 * @PUT
-	 * 
-	 * @Produces(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Consumes(MediaType.APPLICATION_JSON)
-	 * 
-	 * @Path("/")
-	 * 
-	 * @ApiOperation(value = "Copy one network view layout to another view",
-	 * notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResult.class)
-	 * 
-	 * @ApiResponses(value = {
-	 * 
-	 * @ApiResponse(code = 404, message = "Network View does not exist",
-	 * response = CIResponse.class) }) public Response copyLayout(
-	 * 
-	 * @ApiParam(value = "Copycat Layout Parameters", required = true)
-	 * CopycatLayoutParameters params) { return
-	 * copyLayout(params.sourceNetworkViewSUID, params.sourceColumn,
-	 * params.targetNetworkViewSUID, params.targetColumn, params.selectUnmapped,
-	 * params.gridUnmapped);
-	 * 
-	 * }
-	 */
 
 	private Response copyLayout(long sourceViewSUID, String sourceColumn, long targetViewSUID, String targetColumn,
 			boolean selectUnmapped, boolean gridUnmapped) {
