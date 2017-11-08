@@ -60,7 +60,10 @@ public class CyActivator extends AbstractCyActivator {
 		copycatLayoutOpsProps.setProperty(COMMAND_NAMESPACE, "layout");
 		copycatLayoutOpsProps.setProperty(COMMAND, "copycat");
 		copycatLayoutOpsProps.setProperty(COMMAND_DESCRIPTION, "Copy network layout from one network view to another");
-
+		copycatLayoutOpsProps.setProperty(COMMAND_LONG_DESCRIPTION,
+				"Sets the coordinates for each node in the target network to the coordinates of a matching node in the source network.\n\nOptional parameters such as ```gridUnmapped``` and ```selectUnmapped``` determine the behavior of target network nodes that could not be matched.");
+		copycatLayoutOpsProps.setProperty(COMMAND_SUPPORTS_JSON, "true");
+		copycatLayoutOpsProps.setProperty(COMMAND_EXAMPLE_JSON, "{\n  \"mappedNodeCount\": 100,\n  \"unmappedNodeCount\": 0\n}");
 		CopycatLayoutTaskFactory copycatLayout = new CopycatLayoutTaskFactory(cyApplicationManager, viewManager, cyLayoutAlgoManager);
 		registerAllServices(bc, copycatLayout, copycatLayoutOpsProps);
 

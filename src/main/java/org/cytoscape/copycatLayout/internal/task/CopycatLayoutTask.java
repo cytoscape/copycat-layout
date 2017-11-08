@@ -4,6 +4,7 @@ import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_X
 import static org.cytoscape.view.presentation.property.BasicVisualLexicon.NODE_Y_LOCATION;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,9 +30,12 @@ import org.cytoscape.work.ObservableTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.Tunable;
+import org.cytoscape.work.json.JSONResult;
 import org.cytoscape.work.util.ListSingleSelection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
 
 /**
  * 
@@ -69,7 +73,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public ListSingleSelection<String> sourceNetwork;
 
-	@Tunable(description = "Source network view", required = true, gravity = 1.0)
+	@Tunable(description = "Source network view", required = true, gravity = 1.0, longDescription="The name of network to get node coordinates from")
 	public ListSingleSelection<String> getsourceNetwork() {
 
 		return sourceNetwork;
@@ -86,7 +90,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public ListSingleSelection<String> sourceColumn = null;
 
-	@Tunable(description = "Source network node column", required = true, gravity = 2.0, listenForChange = "sourceNetwork")
+	@Tunable(description = "Source network node column", required = true, gravity = 2.0, listenForChange = "sourceNetwork", longDescription="The name of column in the node table used to match nodes", exampleStringValue="name")
 	public ListSingleSelection<String> getsourceColumn() {
 		if (sourceColumn == null) {
 			CyNetworkView fromNetworkView = viewMap.get(sourceNetwork.getSelectedValue());
@@ -102,7 +106,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public ListSingleSelection<String> targetNetwork;
 
-	@Tunable(description = "Target network view", required = true, gravity = 3.0)
+	@Tunable(description = "Target network view", required = true, gravity = 3.0, longDescription="The name of the network to apply coordinates to.")
 	public ListSingleSelection<String> gettargetNetwork() {
 
 		return targetNetwork;
@@ -120,7 +124,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public ListSingleSelection<String> targetColumn = null;
 
-	@Tunable(description = "Target network node column", required = true, gravity = 4.0, listenForChange = "targetNetwork")
+	@Tunable(description = "Target network node column", required = true, gravity = 4.0, listenForChange = "targetNetwork", longDescription="The name of column in the node table used to match nodes", exampleStringValue="name")
 	public ListSingleSelection<String> gettargetColumn() {
 		if (targetColumn == null) {
 			CyNetworkView toNetworkView = viewMap.get(targetNetwork.getSelectedValue());
@@ -136,7 +140,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public boolean selectUnmapped = false;
 
-	@Tunable(description = "Select unmapped nodes", gravity = 5.0, groups = { "After Layout" })
+	@Tunable(description = "Select unmapped nodes", gravity = 5.0, groups = { "After Layout" }, longDescription="If this is set to ```true```, any nodes in the target network that could not be matched to a node in the source network will be selected in the target network", exampleStringValue="true")
 	public boolean getselectUnmapped() {
 		return selectUnmapped;
 	}
@@ -147,7 +151,7 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 	public boolean gridUnmapped = false;
 
-	@Tunable(description = "Layout unmapped nodes in a grid", gravity = 6.0, groups = { "After Layout" })
+	@Tunable(description = "Layout unmapped nodes in a grid", gravity = 6.0, groups = { "After Layout" },  longDescription="If this is set to ```true```, any nodes in the target network that could not be matched to a node in the source network will be laid out in a grid", exampleStringValue="true")
 	public boolean getgridUnmapped() {
 		return gridUnmapped;
 	}
@@ -388,9 +392,26 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		target.setVisualProperty(BasicVisualLexicon.NODE_Z_LOCATION, z);
 	}
 
+	@Override
+	public List<Class<?>> getResultClasses() {
+		return Collections.unmodifiableList(Arrays.asList(String.class, CopycatLayoutResult.class, JSONResult.class));
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public <R> R getResults(Class<? extends R> type) {
+		if (type.equals(String.class)) {
+			return result != null ? (R)("# of mapped nodes:\t" + result.mappedNodeCount + "\t# of unmapped nodes:\t" + result.unmappedNodeCount) : null;
+		} else if (type.equals(JSONResult.class)) {
+			JSONResult res = () -> {	
+				if (result == null) {
+					return "{}";} 
+				else {
+					return new Gson().toJson(result);
+				}
+			};
+			return (R) res;
+		}
 		return (R) result;
 	}
 
