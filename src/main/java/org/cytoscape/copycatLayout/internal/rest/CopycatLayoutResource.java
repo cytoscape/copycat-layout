@@ -47,7 +47,7 @@ public class CopycatLayoutResource {
 	private final CyNetworkViewManager cyNetworkViewManager;
 
 	private final CopycatLayoutTaskFactory copycatLayoutTaskFactory;
-	private final SynchronousTaskManager<?> taskManager;
+	private final SynchronousTaskManager<Object> taskManager;
 
 	private final CIExceptionFactory ciExceptionFactory;
 	private final CIResponseFactory ciResponseFactory;
@@ -67,7 +67,7 @@ public class CopycatLayoutResource {
 			+ '\n';
 
 	public CopycatLayoutResource(final CyApplicationManager cyApplicationManager,
-			final SynchronousTaskManager<?> taskManager, final CyNetworkManager cyNetworkManager,
+			final SynchronousTaskManager<Object> taskManager, final CyNetworkManager cyNetworkManager,
 			final CyNetworkViewManager cyNetworkViewManager, final CopycatLayoutTaskFactory copycatLayoutTaskFactory,
 			final CIResponseFactory ciResponseFactory, final CIExceptionFactory ciExceptionFactory,
 			final CIErrorFactory ciErrorFactory) {

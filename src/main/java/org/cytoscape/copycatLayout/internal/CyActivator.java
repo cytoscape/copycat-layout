@@ -67,7 +67,7 @@ public class CyActivator extends AbstractCyActivator {
 		CopycatLayoutTaskFactory copycatLayout = new CopycatLayoutTaskFactory(cyApplicationManager, viewManager, cyLayoutAlgoManager);
 		registerAllServices(bc, copycatLayout, copycatLayoutOpsProps);
 
-		SynchronousTaskManager<?> taskManager = getService(bc, SynchronousTaskManager.class);
+		SynchronousTaskManager<Object> taskManager = getService(bc, SynchronousTaskManager.class);
 		final CyNetworkManager cyNetworkManager = getService(bc, CyNetworkManager.class);
 		final CyNetworkViewManager cyNetworkViewManager = getService(bc, CyNetworkViewManager.class);
 
