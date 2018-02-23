@@ -27,9 +27,6 @@ package org.cytoscape.copycatLayout.internal;
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.ci.CIErrorFactory;
-import org.cytoscape.ci.CIExceptionFactory;
-import org.cytoscape.ci.CIResponseFactory;
 import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutResource;
 import org.cytoscape.copycatLayout.internal.task.CopycatLayoutTaskFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -44,6 +41,11 @@ import org.osgi.util.tracker.ServiceTracker;
 import static org.cytoscape.work.ServiceProperties.*;
 
 public class CyActivator extends AbstractCyActivator {
+	
+	private ServiceTracker ciResponseFactoryTracker = null;
+	private ServiceTracker ciExceptionFactoryTracker = null;
+	private ServiceTracker ciErrorFactoryTracker = null;
+	
 	public CyActivator() {
 		super();
 	}
@@ -75,13 +77,13 @@ public class CyActivator extends AbstractCyActivator {
 		final CyNetworkManager cyNetworkManager = getService(bc, CyNetworkManager.class);
 		final CyNetworkViewManager cyNetworkViewManager = getService(bc, CyNetworkViewManager.class);
 
-		ServiceTracker ciResponseFactoryTracker = new ServiceTracker(bc,
+		ciResponseFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIResponseFactory)"), null);
 		// this.getService(context, CIResponseFactory.class);
-		ServiceTracker ciExceptionFactoryTracker = new ServiceTracker(bc,
+		ciExceptionFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIExceptionFactory)"), null);
 		// this.getService(context, CIExceptionFactory.class);
-		ServiceTracker ciErrorFactoryTracker = new ServiceTracker(bc,
+		ciErrorFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIErrorFactory)"), null);
 		// this.getService(context, CIErrorFactory.class);
 
@@ -89,5 +91,19 @@ public class CyActivator extends AbstractCyActivator {
 				cyNetworkViewManager, copycatLayout, ciResponseFactoryTracker, ciExceptionFactoryTracker, ciErrorFactoryTracker);
 		registerService(bc, resource, CopycatLayoutResource.class, new Properties());
 
+	}
+	
+	@Override
+	public void shutDown() {
+		if (ciResponseFactoryTracker != null) {
+		ciResponseFactoryTracker.close();
+		}
+		if (ciExceptionFactoryTracker != null) {
+			ciExceptionFactoryTracker.close(); 
+		}
+		if (ciErrorFactoryTracker != null) {
+			ciErrorFactoryTracker.close();
+		}
+		super.shutDown();
 	}
 }
