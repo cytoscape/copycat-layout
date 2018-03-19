@@ -27,6 +27,7 @@ import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.SynchronousTaskManager;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.util.ListSingleSelection;
+import org.osgi.util.tracker.ServiceTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,9 +50,26 @@ public class CopycatLayoutResource {
 	private final CopycatLayoutTaskFactory copycatLayoutTaskFactory;
 	private final SynchronousTaskManager<Object> taskManager;
 
-	private final CIExceptionFactory ciExceptionFactory;
-	private final CIResponseFactory ciResponseFactory;
-	private final CIErrorFactory ciErrorFactory;
+	private final ServiceTracker ciResponseFactoryTracker;
+
+	private CIResponseFactory getCIResponseFactory() {
+		return (CIResponseFactory) ciResponseFactoryTracker.getService();
+	}
+	// private final CIResponseFactory ciResponseFactory;
+
+	private final ServiceTracker ciExceptionFactoryTracker;
+
+	private CIExceptionFactory getCIExceptionFactory() {
+		return (CIExceptionFactory) ciExceptionFactoryTracker.getService();
+	}
+	// private final CIExceptionFactory ciExceptionFactory;
+
+	private final ServiceTracker ciErrorFactoryTracker;
+
+	private CIErrorFactory getCIErrorFactory() {
+		return (CIErrorFactory) ciErrorFactoryTracker.getService();
+	}
+	// private final CIErrorFactory ciErrorFactory;
 
 	public static final String SOURCE_NETWORK_VIEW_NOT_FOUND = "1";
 	public static final String SOURCE_COLUMN_NOT_FOUND = "2";
@@ -69,16 +87,16 @@ public class CopycatLayoutResource {
 	public CopycatLayoutResource(final CyApplicationManager cyApplicationManager,
 			final SynchronousTaskManager<Object> taskManager, final CyNetworkManager cyNetworkManager,
 			final CyNetworkViewManager cyNetworkViewManager, final CopycatLayoutTaskFactory copycatLayoutTaskFactory,
-			final CIResponseFactory ciResponseFactory, final CIExceptionFactory ciExceptionFactory,
-			final CIErrorFactory ciErrorFactory) {
+			final ServiceTracker ciResponseFactoryTracker, final ServiceTracker ciExceptionFactoryTracker,
+			final ServiceTracker ciErrorFactoryTracker) {
 		this.cyApplicationManager = cyApplicationManager;
 		this.taskManager = taskManager;
 		this.cyNetworkManager = cyNetworkManager;
 		this.cyNetworkViewManager = cyNetworkViewManager;
 		this.copycatLayoutTaskFactory = copycatLayoutTaskFactory;
-		this.ciExceptionFactory = ciExceptionFactory;
-		this.ciResponseFactory = ciResponseFactory;
-		this.ciErrorFactory = ciErrorFactory;
+		this.ciExceptionFactoryTracker = ciExceptionFactoryTracker;
+		this.ciResponseFactoryTracker = ciResponseFactoryTracker;
+		this.ciErrorFactoryTracker = ciErrorFactoryTracker;
 
 	}
 
@@ -87,11 +105,11 @@ public class CopycatLayoutResource {
 	private final static String resourceErrorRoot = "urn:cytoscape:ci:copycatLayout-app:v1";
 
 	private CIError buildCIError(int status, String resourcePath, String code, String message, Exception e) {
-		return ciErrorFactory.getCIError(status, resourceErrorRoot + ":" + resourcePath + ":" + code, message);
+		return getCIErrorFactory().getCIError(status, resourceErrorRoot + ":" + resourcePath + ":" + code, message);
 	}
 
 	CIResponse<Object> buildCIErrorResponse(int status, String resourcePath, String code, String message, Exception e) {
-		CIResponse<Object> response = ciResponseFactory.getCIResponse(new Object());
+		CIResponse<Object> response = getCIResponseFactory().getCIResponse(new Object());
 
 		CIError error = buildCIError(status, resourcePath, code, message, e);
 		if (e != null) {
@@ -109,8 +127,8 @@ public class CopycatLayoutResource {
 		CyNetworkView cyNetworkView = cyApplicationManager.getCurrentNetworkView();
 		if (cyNetworkView == null) {
 			String messageString = "Could not find current Network View";
-			throw ciExceptionFactory.getCIException(404,
-					new CIError[] { this.buildCIError(404, resourcePath, errorType, messageString, new Exception(messageString)) });
+			throw getCIExceptionFactory().getCIException(404, new CIError[] {
+					this.buildCIError(404, resourcePath, errorType, messageString, new Exception(messageString)) });
 		}
 		return cyNetworkView;
 	}
@@ -127,8 +145,11 @@ public class CopycatLayoutResource {
 				}
 			}
 		}
-		throw ciExceptionFactory.getCIException(404, new CIError[] { this.buildCIError(404, resourcePath, errorType,
-				"No network view with SUID: " + networkViewSUID, new Exception("No network view found with SUID: " + networkViewSUID)) });
+		throw getCIExceptionFactory()
+				.getCIException(404,
+						new CIError[] { this.buildCIError(404, resourcePath, errorType,
+								"No network view with SUID: " + networkViewSUID,
+								new Exception("No network view found with SUID: " + networkViewSUID)) });
 	}
 
 	@ApiModel(value = "Copycat Layout Response", description = "Number of successfully and unsuccessfully mappes node locations", parent = CIResponse.class)
@@ -140,18 +161,18 @@ public class CopycatLayoutResource {
 		try {
 			name = getNetworkNameWithColumn(viewSUID, column);
 		} catch (NetworkViewNotFoundException e) {
-			throw ciExceptionFactory.getCIException(404,
+			throw getCIExceptionFactory().getCIException(404,
 					new CIError[] { buildCIError(404, "copycat-layout",
 							networkType == "Source" ? SOURCE_NETWORK_VIEW_NOT_FOUND : TARGET_NETWORK_VIEW_NOT_FOUND,
 							networkType + " network view with SUID " + viewSUID + " does not exist.", e) });
 		} catch (NodeColumnNotFoundException e) {
-			throw ciExceptionFactory.getCIException(404,
+			throw getCIExceptionFactory().getCIException(404,
 					new CIError[] { buildCIError(404, "copycat-layout",
 							networkType == "Source" ? SOURCE_COLUMN_NOT_FOUND : TARGET_COLUMN_NOT_FOUND,
 							networkType + " column " + column + " not found in network.", e) });
 
 		} catch (UnsupportedColumnTypeException e) {
-			throw ciExceptionFactory.getCIException(404,
+			throw getCIExceptionFactory().getCIException(404,
 					new CIError[] { buildCIError(404, "copycat-layout",
 							networkType == "Source" ? SOURCE_COLUMN_UNSUPPORTED : TARGET_COLUMN_UNSUPPORTED,
 							networkType + " column " + column + " must be of type String or Integer.", e) });
@@ -188,8 +209,9 @@ public class CopycatLayoutResource {
 			@ApiParam(value = "Clone the current network view layout onto another network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
 		CyNetworkView sourceView = cyApplicationManager.getCurrentNetworkView();
 		if (sourceView == null) {
-			throw ciExceptionFactory.getCIException(404, new CIError[] { buildCIError(404, "copycat-current-layout",
-					SOURCE_NETWORK_VIEW_NOT_FOUND, "No current network selected", new Exception("No current network selected")) });
+			throw getCIExceptionFactory().getCIException(404,
+					new CIError[] { buildCIError(404, "copycat-current-layout", SOURCE_NETWORK_VIEW_NOT_FOUND,
+							"No current network selected", new Exception("No current network selected")) });
 		}
 		long sourceViewSUID = sourceView.getSUID();
 		if (params == null)
@@ -209,8 +231,9 @@ public class CopycatLayoutResource {
 			@ApiParam(value = "Clone the specified network view layout onto the current network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
 		CyNetworkView targetView = cyApplicationManager.getCurrentNetworkView();
 		if (targetView == null) {
-			throw ciExceptionFactory.getCIException(404, new CIError[] { buildCIError(404, "copycat-to-current-layout",
-					TARGET_NETWORK_VIEW_NOT_FOUND, "No current network selected", new Exception("No current network selected")) });
+			throw getCIExceptionFactory().getCIException(404,
+					new CIError[] { buildCIError(404, "copycat-to-current-layout", TARGET_NETWORK_VIEW_NOT_FOUND,
+							"No current network selected", new Exception("No current network selected")) });
 		}
 		long targetViewSUID = targetView.getSUID();
 		if (params == null)
@@ -230,8 +253,10 @@ public class CopycatLayoutResource {
 		String sourceName = validateNetworkName(sourceViewSUID, sourceColumn, "Source");
 		String targetName = validateNetworkName(targetViewSUID, targetColumn, "Target");
 		if (sourceViewSUID == targetViewSUID) {
-			throw ciExceptionFactory.getCIException(400, new CIError[] { buildCIError(400, "copycat-layout",
-					TASK_EXECUTION_ERROR, "Source and destination network views cannot be the same.", new Exception("Source and destination network views cannot be the same.")) });
+			throw getCIExceptionFactory().getCIException(400,
+					new CIError[] { buildCIError(400, "copycat-layout", TASK_EXECUTION_ERROR,
+							"Source and destination network views cannot be the same.",
+							new Exception("Source and destination network views cannot be the same.")) });
 		}
 
 		ListSingleSelection<String> sourceList = new ListSingleSelection<String>(sourceName);

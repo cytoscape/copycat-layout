@@ -27,9 +27,6 @@ package org.cytoscape.copycatLayout.internal;
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.ci.CIErrorFactory;
-import org.cytoscape.ci.CIExceptionFactory;
-import org.cytoscape.ci.CIResponseFactory;
 import org.cytoscape.copycatLayout.internal.rest.CopycatLayoutResource;
 import org.cytoscape.copycatLayout.internal.task.CopycatLayoutTaskFactory;
 import org.cytoscape.model.CyNetworkManager;
@@ -38,15 +35,22 @@ import org.cytoscape.view.layout.CyLayoutAlgorithmManager;
 import org.cytoscape.view.model.CyNetworkViewManager;
 import org.cytoscape.work.SynchronousTaskManager;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.util.tracker.ServiceTracker;
 
 import static org.cytoscape.work.ServiceProperties.*;
 
 public class CyActivator extends AbstractCyActivator {
+	
+	private ServiceTracker ciResponseFactoryTracker = null;
+	private ServiceTracker ciExceptionFactoryTracker = null;
+	private ServiceTracker ciErrorFactoryTracker = null;
+	
 	public CyActivator() {
 		super();
 	}
 
-	public void start(BundleContext bc) {
+	public void start(BundleContext bc) throws InvalidSyntaxException {
 		CyNetworkViewManager viewManager = getService(bc, CyNetworkViewManager.class);
 		CyLayoutAlgorithmManager cyLayoutAlgoManager = getService(bc, CyLayoutAlgorithmManager.class);
 		CyApplicationManager cyApplicationManager = getService(bc, CyApplicationManager.class);
@@ -63,21 +67,43 @@ public class CyActivator extends AbstractCyActivator {
 		copycatLayoutOpsProps.setProperty(COMMAND_LONG_DESCRIPTION,
 				"Sets the coordinates for each node in the target network to the coordinates of a matching node in the source network.\n\nOptional parameters such as ```gridUnmapped``` and ```selectUnmapped``` determine the behavior of target network nodes that could not be matched.");
 		copycatLayoutOpsProps.setProperty(COMMAND_SUPPORTS_JSON, "true");
-		copycatLayoutOpsProps.setProperty(COMMAND_EXAMPLE_JSON, "{\n  \"mappedNodeCount\": 100,\n  \"unmappedNodeCount\": 0\n}");
-		CopycatLayoutTaskFactory copycatLayout = new CopycatLayoutTaskFactory(cyApplicationManager, viewManager, cyLayoutAlgoManager);
+		copycatLayoutOpsProps.setProperty(COMMAND_EXAMPLE_JSON,
+				"{\n  \"mappedNodeCount\": 100,\n  \"unmappedNodeCount\": 0\n}");
+		CopycatLayoutTaskFactory copycatLayout = new CopycatLayoutTaskFactory(cyApplicationManager, viewManager,
+				cyLayoutAlgoManager);
 		registerAllServices(bc, copycatLayout, copycatLayoutOpsProps);
 
 		SynchronousTaskManager<Object> taskManager = getService(bc, SynchronousTaskManager.class);
 		final CyNetworkManager cyNetworkManager = getService(bc, CyNetworkManager.class);
 		final CyNetworkViewManager cyNetworkViewManager = getService(bc, CyNetworkViewManager.class);
 
-		CIResponseFactory ciResponseFactory = this.getService(bc, CIResponseFactory.class);
-		CIExceptionFactory ciExceptionFactory = this.getService(bc, CIExceptionFactory.class);
-		CIErrorFactory ciErrorFactory = this.getService(bc, CIErrorFactory.class);
+		ciResponseFactoryTracker = new ServiceTracker(bc,
+				bc.createFilter("(objectClass=org.cytoscape.ci.CIResponseFactory)"), null);
+		ciResponseFactoryTracker.open();
+		ciExceptionFactoryTracker = new ServiceTracker(bc,
+				bc.createFilter("(objectClass=org.cytoscape.ci.CIExceptionFactory)"), null);
+		ciExceptionFactoryTracker.open();
+		ciErrorFactoryTracker = new ServiceTracker(bc,
+				bc.createFilter("(objectClass=org.cytoscape.ci.CIErrorFactory)"), null);
+		ciErrorFactoryTracker.open();
 
 		CopycatLayoutResource resource = new CopycatLayoutResource(cyApplicationManager, taskManager, cyNetworkManager,
-				cyNetworkViewManager, copycatLayout, ciResponseFactory, ciExceptionFactory, ciErrorFactory);
+				cyNetworkViewManager, copycatLayout, ciResponseFactoryTracker, ciExceptionFactoryTracker, ciErrorFactoryTracker);
 		registerService(bc, resource, CopycatLayoutResource.class, new Properties());
 
+	}
+	
+	@Override
+	public void shutDown() {
+		if (ciResponseFactoryTracker != null) {
+		ciResponseFactoryTracker.close();
+		}
+		if (ciExceptionFactoryTracker != null) {
+			ciExceptionFactoryTracker.close(); 
+		}
+		if (ciErrorFactoryTracker != null) {
+			ciErrorFactoryTracker.close();
+		}
+		super.shutDown();
 	}
 }
