@@ -79,13 +79,13 @@ public class CyActivator extends AbstractCyActivator {
 
 		ciResponseFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIResponseFactory)"), null);
-		// this.getService(context, CIResponseFactory.class);
+		ciResponseFactoryTracker.open();
 		ciExceptionFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIExceptionFactory)"), null);
-		// this.getService(context, CIExceptionFactory.class);
+		ciExceptionFactoryTracker.open();
 		ciErrorFactoryTracker = new ServiceTracker(bc,
 				bc.createFilter("(objectClass=org.cytoscape.ci.CIErrorFactory)"), null);
-		// this.getService(context, CIErrorFactory.class);
+		ciErrorFactoryTracker.open();
 
 		CopycatLayoutResource resource = new CopycatLayoutResource(cyApplicationManager, taskManager, cyNetworkManager,
 				cyNetworkViewManager, copycatLayout, ciResponseFactoryTracker, ciExceptionFactoryTracker, ciErrorFactoryTracker);
