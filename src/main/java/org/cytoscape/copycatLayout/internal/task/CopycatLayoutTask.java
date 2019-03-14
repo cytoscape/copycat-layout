@@ -71,15 +71,15 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 	/* Tunables */
 	Map<String, CyNetworkView> viewMap;
 
-	public ListSingleSelection<String> sourceNetwork;
+	public ListSingleSelection<CyNetworkView> sourceNetwork;
 
 	@Tunable(description = "Source network view", required = true, gravity = 1.0, longDescription="The name of network to get node coordinates from")
-	public ListSingleSelection<String> getsourceNetwork() {
+	public ListSingleSelection<CyNetworkView> getsourceNetwork() {
 
 		return sourceNetwork;
 	}
 
-	public void setsourceNetwork(ListSingleSelection<String> mfn) {
+	public void setsourceNetwork(ListSingleSelection<CyNetworkView> mfn) {
 		if (sourceNetwork != null && mfn.getSelectedValue().equals(sourceNetwork.getSelectedValue()))
 			return;
 
@@ -170,22 +170,22 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 		for (CyNetworkView v : viewManager.getNetworkViewSet()) {
 			viewMap.put(getNetworkName(v), v);
 		}
-		ListSingleSelection<String> sourceList = new ListSingleSelection<String>(
-				new ArrayList<String>(viewMap.keySet()));
+		ListSingleSelection<CyNetworkView> sourceList = new ListSingleSelection<CyNetworkView>(
+				new ArrayList<CyNetworkView>(viewMap.values()));
 		ListSingleSelection<String> targetList = new ListSingleSelection<String>(
 				new ArrayList<String>(viewMap.keySet()));
 		Iterator<String> names = viewMap.keySet().iterator();
 
 		CyNetworkView networkView = cyApplicationManager.getCurrentNetworkView();
 		if (networkView != null)
-			sourceList.setSelectedValue(getNetworkName(networkView));
+			sourceList.setSelectedValue(viewMap.get(getNetworkName(networkView)));
 		else if (names.hasNext()) {
-			sourceList.setSelectedValue(names.next());
+			sourceList.setSelectedValue(viewMap.get(names.next()));
 		}
 
 		if (names.hasNext()) {
 			String name = names.next();
-			if (names.hasNext() && name == sourceList.getSelectedValue())
+			if (names.hasNext() && viewMap.get(name) == sourceList.getSelectedValue())
 				name = names.next();
 			targetList.setSelectedValue(name);
 		}
@@ -218,11 +218,10 @@ public class CopycatLayoutTask extends AbstractTask implements ObservableTask {
 
 		String targetNetworkName = targetNetwork.getSelectedValue();
 		String targetColumnName = targetColumn.getSelectedValue();
-		String sourceNetworkName = sourceNetwork.getSelectedValue();
 		String sourceColumnName = sourceColumn.getSelectedValue();
 
 		CyNetworkView targetNetworkView = viewMap.get(targetNetworkName);
-		CyNetworkView sourceNetworkView = viewMap.get(sourceNetworkName);
+		CyNetworkView sourceNetworkView = sourceNetwork.getSelectedValue();
 
 		if (targetNetworkView == null) {
 			logger.error("Target network not found");

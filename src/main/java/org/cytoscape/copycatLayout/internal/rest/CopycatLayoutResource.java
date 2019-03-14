@@ -188,58 +188,37 @@ public class CopycatLayoutResource {
 	@ApiResponses(value = {
 			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
 	public Response copyCurrentLayout(
-			@PathParam("sourceViewSUID") @ApiParam(value = "Source network view SUID (or \"current\")") Long sourceViewSUID,
-			@PathParam("targetViewSUID") @ApiParam(value = "Target network view SUID (or \"current\")") Long targetViewSUID,
+			@PathParam("sourceViewSUID") @ApiParam(value = "Source network view SUID (or \"current\")") String sourceViewSUID,
+			@PathParam("targetViewSUID") @ApiParam(value = "Target network view SUID (or \"current\")") String targetViewSUID,
 			@ApiParam(value = "Clone the specified network view layout onto another network view") CopycatWithViewSUIDsLayoutParameters params) {
 		if (params == null)
 			params = new CopycatWithViewSUIDsLayoutParameters();
-
-		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
-				params.selectUnmapped, params.gridUnmapped);
+		try {
+			Long sViewSUID = parseSUIDFromString(sourceViewSUID);
+			Long tViewSUID = parseSUIDFromString(sourceViewSUID);
+			return copyLayout(sViewSUID, params.sourceColumn, tViewSUID, params.targetColumn, params.selectUnmapped,
+					params.gridUnmapped);
+		} catch (Exception e) {
+			// THROW EXCEPTION
+		}
+		return null;
 	}
 
-	@PUT
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/current/{targetViewSUID}")
-	@ApiOperation(hidden = true, value = "Copy current network view layout to another view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
-	public Response copyCurrentLayout(@PathParam("targetViewSUID") Long targetViewSUID,
-			@ApiParam(value = "Clone the current network view layout onto another network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
-		CyNetworkView sourceView = cyApplicationManager.getCurrentNetworkView();
-		if (sourceView == null) {
-			throw getCIExceptionFactory().getCIException(404,
-					new CIError[] { buildCIError(404, "copycat-current-layout", SOURCE_NETWORK_VIEW_NOT_FOUND,
-							"No current network selected", new Exception("No current network selected")) });
+	public Long getCurrentNetworkViewSUID() throws Exception {
+		CyNetworkView view = cyApplicationManager.getCurrentNetworkView();
+		if (view == null) {
+			throw new Exception("No current network view");
 		}
-		long sourceViewSUID = sourceView.getSUID();
-		if (params == null)
-			params = new CopycatWithViewSUIDsLayoutParameters();
-		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
-				params.selectUnmapped, params.gridUnmapped);
+		return view.getSUID();
 	}
 
-	@PUT
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Path("/{sourceViewSUID}/current")
-	@ApiOperation(hidden = true, value = "Copy a network view layout to the current view", notes = GENERIC_SWAGGER_NOTES, response = CopycatLayoutResponse.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 404, message = "Network View does not exist", response = CIResponse.class) })
-	public Response copyToCurrentLayout(@PathParam("sourceViewSUID") Long sourceViewSUID,
-			@ApiParam(value = "Clone the specified network view layout onto the current network view", required = true) CopycatWithViewSUIDsLayoutParameters params) {
-		CyNetworkView targetView = cyApplicationManager.getCurrentNetworkView();
-		if (targetView == null) {
-			throw getCIExceptionFactory().getCIException(404,
-					new CIError[] { buildCIError(404, "copycat-to-current-layout", TARGET_NETWORK_VIEW_NOT_FOUND,
-							"No current network selected", new Exception("No current network selected")) });
+	public Long parseSUIDFromString(String suid) throws Exception {
+		if (suid.toLowerCase().equals("current")) {
+			return getCurrentNetworkViewSUID();
+		} else if (suid.matches("\\d+")) {
+			return Long.parseLong(suid);
 		}
-		long targetViewSUID = targetView.getSUID();
-		if (params == null)
-			params = new CopycatWithViewSUIDsLayoutParameters();
-		return copyLayout(sourceViewSUID, params.sourceColumn, targetViewSUID, params.targetColumn,
-				params.selectUnmapped, params.gridUnmapped);
+		throw new Exception("Cannot parse SUID from " + suid);
 	}
 
 	private Response copyLayout(long sourceViewSUID, String sourceColumn, long targetViewSUID, String targetColumn,
